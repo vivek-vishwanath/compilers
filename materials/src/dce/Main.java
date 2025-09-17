@@ -4,6 +4,7 @@ import ir.*;
 import ir.operand.IROperand;
 
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,6 +27,9 @@ public class Main {
         buildGen(blocks);
         runIterations(blocks);
         program.markSweep();
+
+        IRPrinter filePrinter = new IRPrinter(new PrintStream(args[1]));
+        filePrinter.printProgram(program);
     }
 
     static HashSet<IRInstruction> findLeaders(IRProgram program) {
