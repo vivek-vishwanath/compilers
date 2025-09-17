@@ -128,4 +128,23 @@ public class Demo {
     private static LinkedList<IRInstruction> getReachingDefinitions(IRInstruction instruction) {
         return new LinkedList<IRInstruction>();
     }
+
+    private static HashMap<String, IRInstruction> computeGen(Block basicBlock) {
+        HashMap<String, IRInstruction> gen = new HashMap<>();
+        for (IRInstruction instruction : basicBlock.instructions) {
+            gen.put(instruction.operands, instruction);
+        }
+    }
+
+    private static computeSetDifference() {
+
+    }
+
+    private static boolean isWrite(IRInstruction instruction) {
+        HashSet<IRInstruction.OpCode> nonWriteInstructions = new HashSet<>(Arrays.asList(
+            IRInstruction.OpCode.GOTO, IRInstruction.OpCode.BREQ, IRInstruction.OpCode.BRNEQ, IRInstruction.OpCode.BRLT,
+            IRInstruction.OpCode.BRGT, IRInstruction.OpCode.BRGEQ, IRInstruction.OpCode.RETURN, IRInstruction.OpCode.CALL));
+        
+        
+    }
 }
