@@ -5,5 +5,7 @@
 
 cd materials
 mkdir -p build
-find src -name "*.kt" -o -name "*.java" > sources.txt
-kotlinc -d build @sources.txt
+
+# 1. Compile Java sources
+find src -name "*.java" > java_sources.txt
+javac -d build @java_sources.txt
