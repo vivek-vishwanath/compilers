@@ -18,4 +18,10 @@ public class IRProgram {
         this.functionMap = functionMap;
     }
 
+    public void markSweep() {
+        for (IRFunction function : functions) {
+            function.markSweep();
+        }
+    }
+
 }

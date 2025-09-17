@@ -4,10 +4,11 @@ import ir.IRInstruction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Block {
 
-    ArrayList<IRInstruction> instructions = new ArrayList<>();
+    public ArrayList<IRInstruction> instructions = new ArrayList<>();
 
     public IRInstruction leader() {
         return instructions.get(0);
@@ -23,19 +24,38 @@ public class Block {
     Block next2;
 
     HashMap<String, IRInstruction> gen = new HashMap<>();
-    HashMap<String, IRInstruction> kill = new HashMap<>();
-    HashMap<String, IRInstruction> in = new HashMap<>();
-    HashMap<String, IRInstruction> out = new HashMap<>();
+    HashMap<String, ArrayList<IRInstruction>> kill = new HashMap<>();
+    public HashSet<IRInstruction> in = new HashSet<>();
+    HashSet<IRInstruction> out = new HashSet<>();
 
-    public boolean iterate() {
-        HashMap<String, IRInstruction> temp = out;
-        out = new HashMap<>();
-        for (HashMap.Entry<String, IRInstruction> entry : in.entrySet()) {
-            if (!kill.containsKey(entry.getKey())) {
-                out.put(entry.getKey(), entry.getValue());
+    void buildGen() {
+        for (IRInstruction instruction : instructions) {
+            if (Definitions.definitionInstructions.contains(instruction.opCode)) {
+                gen.put(instruction.operands[0].toString(), instruction);
             }
         }
-        out.putAll(gen);
+    }
+
+    void putKill(String variable, IRInstruction inst) {
+        if (!kill.containsKey(variable)) {
+            kill.put(variable, new ArrayList<>());
+        }
+        kill.get(variable).add(inst);
+    }
+
+    public boolean iterate() {
+        HashSet<IRInstruction> temp = out;
+        out = new HashSet<>();
+        for (IRInstruction  entry : in) {
+            if (!kill.containsKey(entry.getDestination())) {
+                out.add(entry);
+            }
+        }
+        for (HashMap.Entry<String, IRInstruction> entry : gen.entrySet()) {
+            out.add(entry.getValue());
+        }
+        if (next1 != null) next1.in = out;
+        if (next2 != null) next2.in = out;
         return out.equals(temp);
     }
 

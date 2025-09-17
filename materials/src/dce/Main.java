@@ -5,8 +5,13 @@ import ir.operand.IROperand;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+
+import static dce.Definitions.buildGen;
+import static dce.Definitions.buildKill;
 
 public class Main {
 
@@ -17,7 +22,10 @@ public class Main {
         HashSet<IRInstruction> leaders = findLeaders(program);
         ArrayList<Block> blocks = buildBlocks(program, leaders);
         buildCFG(blocks);
-        System.out.println(blocks);
+        buildKill(program);
+        buildGen(blocks);
+        runIterations(blocks);
+        program.markSweep();
     }
 
     static HashSet<IRInstruction> findLeaders(IRProgram program) {
@@ -44,8 +52,6 @@ public class Main {
                     case CALL:
                     case CALLR:
                         inst.branch1 = (i + 1 < func.instructions.size()) ? func.instructions.get(i + 1) : null;
-                        List<IRInstruction> instructions = program.functionMap.get(operand.toString()).instructions;
-                        inst.branch2 = instructions != null ? instructions.get(0) : null;
                         leaders.add(inst.branch1);
                         break;
                     default:
