@@ -5,4 +5,4 @@
 # the input ir file and a path where the output ir file should
 # be created.
 
-java -cp "materials/build/:materials/build/kotlin-stdlib.jar" Main $1 $2
+java -cp materials/build dce.Main $1 $2
