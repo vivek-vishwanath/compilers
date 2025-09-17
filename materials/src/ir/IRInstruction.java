@@ -2,6 +2,8 @@ package ir;
 
 import ir.operand.IROperand;
 
+import java.util.Arrays;
+
 public class IRInstruction {
 
     public enum OpCode {
@@ -34,4 +36,8 @@ public class IRInstruction {
         this.irLineNumber = irLineNumber;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%d: %s %s", irLineNumber, opCode, Arrays.toString(operands));
+    }
 }

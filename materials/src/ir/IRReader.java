@@ -115,7 +115,7 @@ public class IRReader {
         }
 
         // Check calls
-        Map<String, IRFunction> functionMap = new HashMap<>();
+        HashMap<String, IRFunction> functionMap = new HashMap<>();
         for (IRFunction f : functions)
             functionMap.put(f.name, f);
         for (IRFunction f : intrinsics.values())
@@ -150,7 +150,15 @@ public class IRReader {
                 }
             }
 
-        return new IRProgram(functions);
+        for (IRFunction f : functions) {
+            for (IRInstruction inst : f.instructions) {
+                if (inst.opCode == IRInstruction.OpCode.LABEL) {
+                    f.labelMap.put(((IRLabelOperand) inst.operands[0]).getName(), inst);
+                }
+            }
+        }
+
+        return new IRProgram(functions, functionMap);
     }
 
     private Pattern typePattern = Pattern.compile("^(?:(void)|(?:(int|float)(?:\\[(\\d+)\\])?))$");
