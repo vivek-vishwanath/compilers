@@ -54,8 +54,8 @@ public class Block {
         for (HashMap.Entry<String, IRInstruction> entry : gen.entrySet()) {
             out.add(entry.getValue());
         }
-        if (next1 != null) next1.in = out;
-        if (next2 != null) next2.in = out;
+        if (next1 != null) next1.in.addAll(out);
+        if (next2 != null) next2.in.addAll(out);
         return out.equals(temp);
     }
 
