@@ -80,4 +80,14 @@ public class Main {
             block.next2 = block.branch().branch2 == null ? null : block.branch().branch2.block;
         }
     }
+
+    static void runIterations(ArrayList<Block> cfg) {
+        boolean steady = false;
+        while (!steady) {
+            steady = true;
+            for (Block block : cfg) {
+                steady &= block.iterate();
+            }
+        }
+    }
 }
