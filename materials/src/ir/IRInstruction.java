@@ -1,5 +1,6 @@
 package ir;
 
+import dce.Block;
 import ir.operand.IROperand;
 
 import java.util.Arrays;
@@ -27,6 +28,10 @@ public class IRInstruction {
     public IROperand[] operands;
 
     public int irLineNumber;
+
+    public IRInstruction branch1, branch2;
+
+    public Block block;
 
     public IRInstruction() {}
 
