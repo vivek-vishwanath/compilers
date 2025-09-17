@@ -145,6 +145,6 @@ public class Demo {
             IRInstruction.OpCode.GOTO, IRInstruction.OpCode.BREQ, IRInstruction.OpCode.BRNEQ, IRInstruction.OpCode.BRLT,
             IRInstruction.OpCode.BRGT, IRInstruction.OpCode.BRGEQ, IRInstruction.OpCode.RETURN, IRInstruction.OpCode.CALL));
         
-        
+
     }
 }
