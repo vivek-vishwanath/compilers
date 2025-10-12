@@ -1,2 +1,4 @@
 materials/build/
 materials/java_sources.txt
+**/.idea/
+**/*.iml
