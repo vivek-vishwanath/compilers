@@ -21,17 +21,6 @@ public class Register extends MIPSOperand {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (!(other instanceof Register)) {
-            return false;
-        }
-
-        if (((Register)other).name.equals(name)) {
-            return true;
-        } else {
-            return false;
-        }
+        return other instanceof Register && ((Register) other).name.equals(name);
     }
 }

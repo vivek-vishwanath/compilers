@@ -158,12 +158,7 @@ public class MIPSInterpreter {
 
                     int i = addr.indexOf('(');
                     String offset = addr.substring(0, i);
-                    Imm imm;
-                    if (offset.matches(immHexPat)) {
-                        imm = new Imm(offset, "HEX");
-                    } else {
-                        imm = new Imm(offset, "DEC");
-                    }
+                    Imm imm = new Imm(offset, Imm.ImmType.INT);
 
                     int n;
 

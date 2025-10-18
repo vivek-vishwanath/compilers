@@ -135,19 +135,19 @@ public class MIPSReader {
                     if (isWord) {
                         data.put(nextAddr, Integer.decode(token));
                     } else {
-                        operands.add(new Imm(token, "HEX"));
+                        operands.add(new Imm(token, Imm.ImmType.INT));
                     }
                 } else if (token.matches(immFloatingPointPat)) {
                     if (op.precision.equals("s")) {
-                        operands.add(new Imm(token, "SINGLE"));
+                        operands.add(new Imm(token, Imm.ImmType.SINGLE_FLOAT));
                     } else {
-                        operands.add(new Imm(token, "DOUBLE"));
+                        operands.add(new Imm(token, Imm.ImmType.DOUBLE_FLOAT));
                     }
                 } else if (token.matches(immDecPat)) {
                     if (isWord) {
                         data.put(nextAddr, Integer.parseInt(token));
                     } else {
-                        operands.add(new Imm(token, "DEC"));
+                        operands.add(new Imm(token, Imm.ImmType.INT));
                     }
                 } else if (token.matches(addrPCRelativePat)) {
                     operands.add(new Addr(token));
@@ -157,12 +157,7 @@ public class MIPSReader {
                 } else if (token.matches(addrBaseOffPat)) {
                     int i = token.indexOf('(');
                     String offset = token.substring(0, i);
-                    Imm imm;
-                    if (offset.matches(immHexPat)) {
-                        imm = new Imm(offset, "HEX");
-                    } else {
-                        imm = new Imm(offset, "DEC");
-                    }
+                    Imm imm = new Imm(offset, Imm.ImmType.INT);
 
                     String base = token.substring(i);
                     operands.add(new Addr(imm,
