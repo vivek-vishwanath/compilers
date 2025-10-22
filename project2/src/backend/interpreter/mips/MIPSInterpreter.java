@@ -228,8 +228,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) + readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) + readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case ADDI:
@@ -237,8 +237,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) + imm.getInt());
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) + imm.getInt());
                 pc += 4;
                 return;
             case SUB:
@@ -246,8 +246,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) - readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) - readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case MUL:
@@ -255,8 +255,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) * readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) * readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case DIV:
@@ -264,8 +264,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) / readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) / readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case AND:
@@ -273,8 +273,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) & readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) & readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case ANDI:
@@ -282,8 +282,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) & imm.getInt());
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) & imm.getInt());
                 pc += 4;
                 return;
             case OR:
@@ -291,8 +291,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) | readIntRegister(rt.name));
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) | readIntRegister(rt.name()));
                 pc += 4;
                 return;
             case ORI:
@@ -300,8 +300,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) | imm.getInt());
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) | imm.getInt());
                 pc += 4;
                 return;
             case SLL:
@@ -309,20 +309,20 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readIntRegister(rs.name) << imm.getInt());
+                writeRegister(dest.name(),
+                        readIntRegister(rs.name()) << imm.getInt());
                 pc += 4;
                 return;
             case LI:
                 dest = inst.getWrite();
                 imm = (Imm)inst.operands.get(1);
-                writeRegister(dest.name, imm.getInt());
+                writeRegister(dest.name(), imm.getInt());
                 pc += 4;
                 return;
             case LA:
                 dest = inst.getWrite();
                 addr = (Addr)inst.operands.get(1);
-                writeRegister(dest.name, addrVal(addr));
+                writeRegister(dest.name(), addrVal(addr));
                 pc += 4;
                 return;
             case LW:
@@ -330,28 +330,28 @@ public class MIPSInterpreter {
                 addr = (Addr)inst.operands.get(1);
 
                 memData = readMemInt(addrVal(addr));
-                writeRegister(dest.name, memData);
+                writeRegister(dest.name(), memData);
                 pc += 4;
                 return;
             case MOVE:
                 dest = inst.getWrite();
                 rs = inst.getReads()[0];
 
-                writeRegister(dest.name, readIntRegister(rs.name));
+                writeRegister(dest.name(), readIntRegister(rs.name()));
                 pc += 4;
                 return;
             case SW:
                 addr = (Addr)inst.operands.get(1);
                 rs = inst.getReads()[0];
 
-                writeMemInt(addrVal(addr), readIntRegister(rs.name));
+                writeMemInt(addrVal(addr), readIntRegister(rs.name()));
                 pc += 4;
                 return;
             case BEQ:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                if (readIntRegister(rs.name) == readIntRegister(rt.name)) {
+                if (readIntRegister(rs.name()) == readIntRegister(rt.name())) {
                     addr = (Addr)inst.operands.get(2);
                     pc = addrVal(addr);
                 } else {
@@ -363,7 +363,7 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                if (readIntRegister(rs.name) != readIntRegister(rt.name)) {
+                if (readIntRegister(rs.name()) != readIntRegister(rt.name())) {
                     addr = (Addr)inst.operands.get(2);
                     pc = addrVal(addr);
                 } else {
@@ -375,7 +375,7 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                if (readIntRegister(rs.name) < readIntRegister(rt.name)) {
+                if (readIntRegister(rs.name()) < readIntRegister(rt.name())) {
                     addr = (Addr)inst.operands.get(2);
                     pc = addrVal(addr);
                 } else {
@@ -387,7 +387,7 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                if (readIntRegister(rs.name) > readIntRegister(rt.name)) {
+                if (readIntRegister(rs.name()) > readIntRegister(rt.name())) {
                     addr = (Addr)inst.operands.get(2);
                     pc = addrVal(addr);
                 } else {
@@ -399,7 +399,7 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                if (readIntRegister(rs.name) >= readIntRegister(rt.name)) {
+                if (readIntRegister(rs.name()) >= readIntRegister(rt.name())) {
                     addr = (Addr)inst.operands.get(2);
                     pc = addrVal(addr);
                 } else {
@@ -418,7 +418,7 @@ public class MIPSInterpreter {
                 return;
             case JR:
                 rs = inst.getReads()[0];
-                pc = readIntRegister(rs.name);
+                pc = readIntRegister(rs.name());
 
                 return;
             case SYSCALL:
@@ -479,8 +479,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readSingleRegister(rs.name) + readSingleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readSingleRegister(rs.name()) + readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case ADDI_S:
@@ -488,8 +488,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readSingleRegister(rs.name) + imm.getSingle());
+                writeRegister(dest.name(),
+                        readSingleRegister(rs.name()) + imm.getSingle());
                 pc += 4;
                 return;
             case SUB_S:
@@ -497,8 +497,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readSingleRegister(rs.name) - readSingleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readSingleRegister(rs.name()) - readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case MUL_S:
@@ -506,8 +506,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readSingleRegister(rs.name) * readSingleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readSingleRegister(rs.name()) * readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case DIV_S:
@@ -515,21 +515,21 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readSingleRegister(rs.name) / readSingleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readSingleRegister(rs.name()) / readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case LI_S:
                 dest = inst.getWrite();
                 imm = (Imm)inst.operands.get(1);
-                writeRegister(dest.name, imm.getSingle());
+                writeRegister(dest.name(), imm.getSingle());
                 pc += 4;
                 return;
             case MOV_S:
                 dest = inst.getWrite();
                 rs = inst.getReads()[0];
 
-                writeRegister(dest.name, readSingleRegister(rs.name));
+                writeRegister(dest.name(), readSingleRegister(rs.name()));
                 pc += 4;
                 return;
             case L_S:
@@ -537,49 +537,49 @@ public class MIPSInterpreter {
                 addr = (Addr)inst.operands.get(1);
 
                 memDataSingle = readMemSingle(addrVal(addr));
-                writeRegister(dest.name, memDataSingle);
+                writeRegister(dest.name(), memDataSingle);
                 pc += 4;
                 return;
             case S_S:
                 addr = (Addr)inst.operands.get(1);
                 rs = inst.getReads()[0];
 
-                writeMemSingle(addrVal(addr), readSingleRegister(rs.name));
+                writeMemSingle(addrVal(addr), readSingleRegister(rs.name()));
                 pc += 4;
                 return;
             case C_EQ_S:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readSingleRegister(rs.name) == readSingleRegister(rt.name));
+                control = (readSingleRegister(rs.name()) == readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_NE_S:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readSingleRegister(rs.name) != readSingleRegister(rt.name));
+                control = (readSingleRegister(rs.name()) != readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_LT_S:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readSingleRegister(rs.name) < readSingleRegister(rt.name));
+                control = (readSingleRegister(rs.name()) < readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_GT_S:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readSingleRegister(rs.name) > readSingleRegister(rt.name));
+                control = (readSingleRegister(rs.name()) > readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_GE_S:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readSingleRegister(rs.name) >= readSingleRegister(rt.name));
+                control = (readSingleRegister(rs.name()) >= readSingleRegister(rt.name()));
                 pc += 4;
                 return;
             case ADD_D:
@@ -587,8 +587,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readDoubleRegister(rs.name) + readDoubleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readDoubleRegister(rs.name()) + readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case ADDI_D:
@@ -596,8 +596,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 imm = (Imm)inst.operands.get(2);
 
-                writeRegister(dest.name,
-                        readDoubleRegister(rs.name) + imm.getDouble());
+                writeRegister(dest.name(),
+                        readDoubleRegister(rs.name()) + imm.getDouble());
                 pc += 4;
                 return;
             case SUB_D:
@@ -605,8 +605,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readDoubleRegister(rs.name) - readDoubleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readDoubleRegister(rs.name()) - readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case MUL_D:
@@ -614,8 +614,8 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readDoubleRegister(rs.name) * readDoubleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readDoubleRegister(rs.name()) * readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case DIV_D:
@@ -623,21 +623,21 @@ public class MIPSInterpreter {
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                writeRegister(dest.name,
-                        readDoubleRegister(rs.name) / readDoubleRegister(rt.name));
+                writeRegister(dest.name(),
+                        readDoubleRegister(rs.name()) / readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case LI_D:
                 dest = inst.getWrite();
                 imm = (Imm)inst.operands.get(1);
-                writeRegister(dest.name, imm.getDouble());
+                writeRegister(dest.name(), imm.getDouble());
                 pc += 4;
                 return;
             case MOV_D:
                 dest = inst.getWrite();
                 rs = inst.getReads()[0];
 
-                writeRegister(dest.name, readDoubleRegister(rs.name));
+                writeRegister(dest.name(), readDoubleRegister(rs.name()));
                 pc += 4;
                 return;
             case L_D:
@@ -645,49 +645,49 @@ public class MIPSInterpreter {
                 addr = (Addr)inst.operands.get(1);
 
                 memDataDouble = readMemDouble(addrVal(addr));
-                writeRegister(dest.name, memDataDouble);
+                writeRegister(dest.name(), memDataDouble);
                 pc += 4;
                 return;
             case S_D:
                 addr = (Addr)inst.operands.get(1);
                 rs = inst.getReads()[0];
 
-                writeMemDouble(addrVal(addr), readDoubleRegister(rs.name));
+                writeMemDouble(addrVal(addr), readDoubleRegister(rs.name()));
                 pc += 4;
                 return;
             case C_EQ_D:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readDoubleRegister(rs.name) == readDoubleRegister(rt.name));
+                control = (readDoubleRegister(rs.name()) == readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_NE_D:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readDoubleRegister(rs.name) != readDoubleRegister(rt.name));
+                control = (readDoubleRegister(rs.name()) != readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_LT_D:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readDoubleRegister(rs.name) < readDoubleRegister(rt.name));
+                control = (readDoubleRegister(rs.name()) < readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_GT_D:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readDoubleRegister(rs.name) > readDoubleRegister(rt.name));
+                control = (readDoubleRegister(rs.name()) > readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case C_GE_D:
                 rs = inst.getReads()[0];
                 rt = inst.getReads()[1];
 
-                control = (readDoubleRegister(rs.name) >= readDoubleRegister(rt.name));
+                control = (readDoubleRegister(rs.name()) >= readDoubleRegister(rt.name()));
                 pc += 4;
                 return;
             case BC1T:
@@ -978,9 +978,9 @@ public class MIPSInterpreter {
             case PC_RELATIVE:
                 return program.labels.get(addr.label);
             case REGISTER:
-                return readIntRegister(addr.register.name);
+                return readIntRegister(addr.register.name());
             case BASE_OFFSET:
-                return readIntRegister(addr.register.name) + addr.constant.getInt();
+                return readIntRegister(addr.register.name()) + addr.constant.getInt();
             default:
                 return 0;
         }

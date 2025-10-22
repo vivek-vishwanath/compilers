@@ -7,6 +7,7 @@ import ir.operand.IROperand;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class MIPSInstruction {
@@ -73,9 +74,6 @@ public class MIPSInstruction {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        if (label != null) {
-            builder.append(label + ": ");
-        }
 
         builder.append(op.toString());
         if (operands.isEmpty()) {
@@ -211,21 +209,28 @@ public class MIPSInstruction {
         }
     }
 
-    public HashMap<String, String> virtualToPhysical() {
-        int regCount = 0;
-        HashMap<String, String> retval = new HashMap<>();
-        for (int i = 0; i < operands.size(); i++) {
-            MIPSOperand operand = operands.get(i);
-            if (operand instanceof Register) {
-                Register register = (Register) operand;
-                if (!register.isVirtual) continue;
-                String oldName = register.name;
-                register.name = "$v" + regCount;
-                register.isVirtual = false;
-                retval.put(register.name, oldName);
-                regCount++;
+    public void virtualToPhysical() {
+        HashSet<Integer> regs = new HashSet<>();
+        int tRegNum = 0;
+        for (MIPSOperand operand : operands) {
+            if (operand instanceof Register register) {
+                if (!register.isVirtual()) {
+                    regs.add(register.idx);
+                }
             }
         }
-        return retval;
+        for (MIPSOperand operand : operands) {
+            if (operand instanceof Register register && register.isVirtual()) {
+                String oldName = register.name();
+                String newName = "$t" + tRegNum;
+                while (regs.contains(Register.getIdx(newName))) {
+                    tRegNum++;
+                    newName = "$t" + tRegNum;
+                }
+                register.setRegister(newName);
+                register.oldName = oldName;
+                regs.add(Register.getIdx(newName));
+            }
+        }
     }
 }

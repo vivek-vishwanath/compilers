@@ -7,7 +7,9 @@ import backend.interpreter.mips.operand.Imm;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
 import ir.operand.IRConstantOperand;
+import ir.operand.IRFunctionOperand;
 import ir.operand.IROperand;
+import ir.operand.IRVariableOperand;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,6 +80,7 @@ public class IRInstruction {
     }};
 
     static HashMap<String, Integer> virtualRegs = new HashMap<>();
+    public static final int REGISTER_COUNT = 32;
     public static int vregCount = 32;
 
     static Register v0 = new Register("$v0");
@@ -88,13 +91,13 @@ public class IRInstruction {
         if (!virtualRegs.containsKey(identifier)) {
             virtualRegs.put(identifier, vregCount++);
         }
-        return new Register("$" + virtualRegs.get(identifier));
+        return new Register(virtualRegs.get(identifier));
     }
 
     public Register issueVRegister(IROperand operand) {
         String identifier = operand.toString();
         virtualRegs.put(identifier, vregCount);
-        return new Register("$" + vregCount++);
+        return new Register(vregCount++);
     }
 
     public ArrayList<MIPSInstruction> compile(String label) {
@@ -126,11 +129,11 @@ public class IRInstruction {
                 boolean b1 = operands[1] instanceof IRConstantOperand;
                 boolean b2 = operands[2] instanceof IRConstantOperand;
                 if (b1) {
-                    r1 = new Register("$" + vregCount++);
+                    r1 = new Register(vregCount++);
                     list.add(new MIPSInstruction(MIPSOp.LI, label, r1, new Imm(operands[1].toString(), Imm.ImmType.INT)));
                 } else r1 = getVRegister(operands[1]);
                 if (b2) {
-                    r2 = new Register("$" + vregCount++);
+                    r2 = new Register(vregCount++);
                     list.add(new MIPSInstruction(MIPSOp.LI, label, r2, new Imm(operands[2].toString(), Imm.ImmType.INT)));
                 } else r2 = getVRegister(operands[2]);
                 list.add(new MIPSInstruction(branchMap.get(opCode), b1 || b2 ? null : label, r1, r2, new Addr(operands[0].toString())));
@@ -145,15 +148,39 @@ public class IRInstruction {
                 list.add(new MIPSInstruction(MIPSOp.JR, null, ra));
             }
             case CALL -> {
-                for (int i = 1; i < operands.length; i++)
-                    list.add(new MIPSInstruction(MIPSOp.MOVE, i == 1 ? label : null, new Register("$a" + (i - 1)), getVRegister(operands[i])));
-                list.add(new MIPSInstruction(MIPSOp.JAL, null, new Addr(operands[0].toString())));
+                if (operands[0] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[0]).getName().equals("puti")) {
+                    list.add(new MIPSInstruction(MIPSOp.LI, label, v0, new Imm("1", Imm.ImmType.INT)));
+                    if (operands[1] instanceof IRConstantOperand)
+                        list.add(new MIPSInstruction(MIPSOp.LI, null, new Register("$a0"), new Imm(operands[1].toString(), Imm.ImmType.INT)));
+                    else if (operands[1] instanceof IRVariableOperand) {
+                        list.add(new MIPSInstruction(MIPSOp.MOVE, null, new Register("$a0"), getVRegister(operands[1])));
+                    }
+                    list.add(new MIPSInstruction(MIPSOp.SYSCALL, null));
+                } else if (operands[0] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[0]).getName().equals("putc")) {
+                    list.add(new MIPSInstruction(MIPSOp.LI, label, v0, new Imm("11", Imm.ImmType.INT)));
+                    if (operands[1] instanceof IRConstantOperand)
+                        list.add(new MIPSInstruction(MIPSOp.LI, null, new Register("$a0"), new Imm(operands[1].toString(), Imm.ImmType.INT)));
+                    else if (operands[1] instanceof IRVariableOperand) {
+                        list.add(new MIPSInstruction(MIPSOp.MOVE, null, new Register("$a0"), getVRegister(operands[1])));
+                    }
+                    list.add(new MIPSInstruction(MIPSOp.SYSCALL, null));
+                } else {
+                    for (int i = 1; i < operands.length; i++)
+                        list.add(new MIPSInstruction(MIPSOp.MOVE, i == 1 ? label : null, new Register("$a" + (i - 1)), getVRegister(operands[i])));
+                    list.add(new MIPSInstruction(MIPSOp.JAL, operands.length > 1 ? null : label, new Addr(operands[0].toString())));
+                }
             }
             case CALLR -> {
-                for (int i = 2; i < operands.length; i++)
-                    list.add(new MIPSInstruction(MIPSOp.MOVE, i == 2 ? label : null, new Register("$a" + (i - 2)), getVRegister(operands[i])));
-                list.add(new MIPSInstruction(MIPSOp.JAL, null, new Addr(operands[1].toString())));
-                list.add(new MIPSInstruction(MIPSOp.MOVE, null, issueVRegister(operands[0]), v0));
+                if (operands[1] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[1]).getName().equals("geti")) {
+                    list.add(new MIPSInstruction(MIPSOp.LI, label, v0, new Imm("5", Imm.ImmType.INT)));
+                    list.add(new MIPSInstruction(MIPSOp.SYSCALL, null));
+                    list.add(new MIPSInstruction(MIPSOp.MOVE, null, issueVRegister(operands[0]), v0));
+                } else {
+                    for (int i = 2; i < operands.length; i++)
+                        list.add(new MIPSInstruction(MIPSOp.MOVE, i == 2 ? label : null, new Register("$a" + (i - 2)), getVRegister(operands[i])));
+                    list.add(new MIPSInstruction(MIPSOp.JAL, operands.length > 2 ? null : label, new Addr(operands[1].toString())));
+                    list.add(new MIPSInstruction(MIPSOp.MOVE, null, issueVRegister(operands[0]), v0));
+                }
             }
             case null, default -> {
             }
