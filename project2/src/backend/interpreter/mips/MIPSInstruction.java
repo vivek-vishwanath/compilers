@@ -3,8 +3,10 @@ package backend.interpreter.mips;
 import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
+import ir.operand.IROperand;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class MIPSInstruction {
@@ -207,5 +209,23 @@ public class MIPSInstruction {
             default:
                 return null;
         }
+    }
+
+    public HashMap<String, String> virtualToPhysical() {
+        int regCount = 0;
+        HashMap<String, String> retval = new HashMap<>();
+        for (int i = 0; i < operands.size(); i++) {
+            MIPSOperand operand = operands.get(i);
+            if (operand instanceof Register) {
+                Register register = (Register) operand;
+                if (!register.isVirtual) continue;
+                String oldName = register.name;
+                register.name = "$v" + regCount;
+                register.isVirtual = false;
+                retval.put(register.name, oldName);
+                regCount++;
+            }
+        }
+        return retval;
     }
 }

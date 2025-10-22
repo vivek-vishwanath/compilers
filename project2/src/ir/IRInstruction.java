@@ -78,7 +78,7 @@ public class IRInstruction {
     }};
 
     static HashMap<String, Integer> virtualRegs = new HashMap<>();
-    static int vregCount = 32;
+    public static int vregCount = 32;
 
     static Register v0 = new Register("$v0");
     static Register ra = new Register("$ra");

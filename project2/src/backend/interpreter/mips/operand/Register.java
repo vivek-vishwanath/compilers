@@ -34,4 +34,8 @@ public class Register extends MIPSOperand {
             return false;
         }
     }
+
+    public boolean isT() {
+        return (name.startsWith("$t"));
+    }
 }
