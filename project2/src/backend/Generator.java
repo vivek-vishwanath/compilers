@@ -2,6 +2,7 @@ package backend;
 
 import backend.interpreter.mips.MIPSInstruction;
 import backend.interpreter.mips.MIPSOp;
+import backend.interpreter.mips.MemLayout;
 import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.Imm;
 import backend.interpreter.mips.operand.Register;
@@ -9,6 +10,7 @@ import backend.interpreter.mips.operand.Imm.ImmType;
 import ir.*;
 import ir.operand.IRLabelOperand;
 import ir.operand.IROperand;
+import ir.operand.IRVariableOperand;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,13 +25,20 @@ public class Generator {
 
         FileWriter writer = new FileWriter(args[1]);
 
-        writer.write(".text\n\nj main\n\n");
+        writer.write(".data\n\tSTACK: .word " + (long) MemLayout.STACK + "\n\n");
+        writer.write(".text\n");
+        writer.write("\tlw $sp, STACK\n");
+        writer.write("\tmove $fp, $sp\n");
+        writer.write("\tjal main\n\tli $v0, 10\n\tsyscall\n\n");
 
         for (IRFunction function : program.functions) {
-            IRInstruction.vregCount = 32;
             ArrayList<MIPSInstruction> instructions = new ArrayList<>();
             writer.write(function.name + ":\n");
             String label = null;
+            for (int i = 0; i < Math.min(function.parameters.size(), 4); i++) {
+                IRVariableOperand op = function.parameters.get(i);
+                Register.Physical.putReg(op, "$a" + i);
+            }
             for (IRInstruction instruction : function.instructions) {
                 for (int i = 0; i < instruction.operands.length; i++) {
                     IROperand operand = instruction.operands[i];
@@ -42,12 +51,12 @@ public class Generator {
                     label = instruction.operands[0].toString();
                     continue;
                 }
-                ArrayList<MIPSInstruction> list = instruction.compile(label);
+                ArrayList<MIPSInstruction> list = instruction.compile(label, function.name);
                 list.forEach(it -> System.out.println("\t\t" + it));
                 instructions.addAll(list);
                 label = null;
             }
-            allocate(instructions, IRInstruction.vregCount);
+            allocate(instructions, function.name);
             instructions.forEach(it -> {
                 try {
                     if (it.label != null) {
@@ -61,44 +70,74 @@ public class Generator {
             writer.write("\n");
             writer.flush();
         }
-        writer.write("\tli $v0, 10\n\tsyscall");
         writer.close();
 
     }
 
     // call function on a function-by-function basis
-    public static void allocate(ArrayList<MIPSInstruction> list, int numVRegisters) {
-        // ignore non virtual registers (a's, v's, etc.)
-        Register stack = new Register("$sp");
-        Imm stackOff = new Imm("" + -4*numVRegisters, ImmType.INT);
-        list.addFirst(new MIPSInstruction(MIPSOp.ADDI, list.get(1).label, stack, stack, stackOff));
+    public static void allocate(ArrayList<MIPSInstruction> list, String functionName) {
+        HashMap<IRVariableOperand, Integer> stackLocations = new HashMap<>();
+        Register fp = Register.Physical.get("$fp");
+        Register sp = Register.Physical.get("$sp");
+        Register ra = Register.Physical.get("$ra");
+        int stackSize = 4 * Register.numRegs();
+        int stackEdge = stackSize - 4;
+        Imm stackOff = new Imm("" + -stackSize, ImmType.INT);
+        list.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", ImmType.INT), sp)));
+        list.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", ImmType.INT)));
+        list.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
+        list.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
         for (int i = 0; i < list.size(); i++) {
             MIPSInstruction instruction = list.get(i);
-            instruction.virtualToPhysical();
             Register[] reads = instruction.getReads();
             Register write = instruction.getWrite();
-            for (Register read : reads) {
+            int n = 0;
+            if (reads.length > 0)
+                while (instruction.operands.get(n) != reads[0]) n++;
+            for (int j = 0; j < reads.length; j++) {
+                Register read = reads[j];
                 // only t regs were once virtual and need a mapping on the stack
-                if (read.isNotT()) continue;
-                Imm offset = new Imm("" + 4 * (Integer.parseInt(read.oldName.substring(1)) - IRInstruction.REGISTER_COUNT), ImmType.INT);
-                Addr address = new Addr(offset, stack);
+                if (!(read instanceof Register.Virtual vreg)) continue;
+                Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
+                if (stackIdx == null) {
+                    stackIdx = stackEdge;
+                    stackLocations.put(vreg.var, stackEdge);
+                    stackEdge -= 4;
+                }
+                Register.Physical physical = Register.Physical.get("$t" + (j+1));
+                instruction.operands.set(n + j, physical);
+                Imm offset = new Imm("" + stackIdx, ImmType.INT);
+                Addr address = new Addr(offset, sp);
                 // insert right before current instruction
                 String label = null;
                 if (list.get(i).label != null) {
                     label = list.get(i).label;
                     list.get(i).label = null;
                 }
-                list.add(i, new MIPSInstruction(MIPSOp.LW, label, read, address));
+                list.add(i, new MIPSInstruction(MIPSOp.LW, label, physical, address));
                 i++; // move i down by 1
             }
             if (write != null) {
-                if (write.isNotT()) continue;
-                Imm offset = new Imm("" + 4 * (Integer.parseInt(write.oldName.substring(1)) - IRInstruction.REGISTER_COUNT), ImmType.INT);
-                Addr address = new Addr(offset, stack);
-                // add after current instruction
-                list.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, write, address));
-                i++; // point i to sw instruction and i++ in for loop will skip over it
+                if (write instanceof Register.Virtual vreg) {
+                    Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
+                    if (stackIdx == null) {
+                        stackIdx = stackEdge;
+                        stackLocations.put(vreg.var, stackEdge);
+                        stackEdge -= 4;
+                    }
+                    Register.Physical physical = Register.Physical.get("$t0");
+                    instruction.operands.set(0, physical);
+                    Imm offset = new Imm("" + stackIdx, ImmType.INT);
+                    Addr address = new Addr(offset, sp);
+                    // add after current instruction
+                    list.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, physical, address));
+                    i++; // point i to sw instruction and i++ in for loop will skip over it
+                }
             }
         }
+        list.add(new MIPSInstruction(MIPSOp.ADDI, functionName + "_teardown", sp, fp, new Imm("8", ImmType.INT)));
+        list.add(new MIPSInstruction(MIPSOp.LW, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
+        list.add(new MIPSInstruction(MIPSOp.LW, null, fp, new Addr(new Imm("0", ImmType.INT), fp)));
+        list.add(new MIPSInstruction(MIPSOp.JR, null, Register.Physical.get("$ra")));
     }
 }

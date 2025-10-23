@@ -172,7 +172,7 @@ public class MIPSInterpreter {
                     }
 
                     String base = addr.substring(i);
-                    Addr address = new Addr(imm, new Register(base.replaceAll("\\(|\\)", "")));
+                    Addr address = new Addr(imm, Register.Physical.get(base.replaceAll("\\(|\\)", "")));
                     int addrVal = addrVal(address);
 
                     System.out.println();

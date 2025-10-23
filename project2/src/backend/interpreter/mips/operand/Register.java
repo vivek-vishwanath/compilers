@@ -1,66 +1,115 @@
 package backend.interpreter.mips.operand;
 
-public class Register extends MIPSOperand {
+import ir.operand.IROperand;
+import ir.operand.IRVariableOperand;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+
+public abstract class Register extends MIPSOperand {
 
     public int idx;
 
-    public String oldName;
-
-    public Register(int idx) {
+    private Register(int idx) {
         this.idx = idx;
     }
 
-    public Register(String name) {
-        setRegister(name);
+    public abstract String name();
+
+    private static HashMap<IRVariableOperand, Register> map = new HashMap<>();
+
+    public void reset() {
+        map = new HashMap<>();
     }
 
-    public void setRegister(String name) {
-        if (name.charAt(0) == '$') {
-            try {
-                this.idx = Integer.parseInt(name.substring(1));
-                assert this.idx >= 32;
-            } catch (NumberFormatException e) {
-                assert name.matches("^\\$(zero|at|v[0-1]|a[0-3]|t[0-9]|s[0-7]|k[0-1]|gp|sp|fp|ra)$");
-                this.idx = getIdx(name);
-            }
+    public static int numRegs() {
+        return map.entrySet().stream().filter(it -> it.getValue() instanceof Virtual).collect(Collectors.toSet()).size();
+    }
+
+    public static Register getVar(IROperand var) {
+        return map.getOrDefault(var, null);
+    }
+
+    public static class Virtual extends Register {
+
+        public IRVariableOperand var;
+
+        public Virtual(int idx) {
+            super(idx);
+        }
+        private static ArrayList<Virtual> vregs = new ArrayList<>();
+        private static int globalIdx = 0;
+
+        public static Virtual issueTemp() {
+            Virtual vreg = new Virtual(globalIdx++);
+            vregs.add(vreg);
+            return vreg;
+        }
+
+        public static Virtual issueVar(IROperand var) {
+            Virtual reg = issueTemp();
+            reg.var = (IRVariableOperand) var;
+            map.put(reg.var, reg);
+            return reg;
+        }
+
+        @Override
+        public String name() {
+            return "$" + idx;
+        }
+
+        @Override
+        public String toString() {
+            return name();
         }
     }
 
-    public static int getIdx(String name) {
-        for (int i = 0; i < 32; i++) {
-            if (("$" + registers[i]).equals(name)) {
-                return i;
-            }
+    public static class Physical extends Register {
+
+        String name;
+
+        private Physical(int idx, String name) {
+            super(idx);
+            this.name = name;
         }
-        return -1;
-    }
 
-    public boolean isVirtual() {
-        return this.idx >= 32;
-    }
+        @Override
+        public String name() {
+            return name;
+        }
 
-    public String name() {
-        return toString();
-    }
+        public static void putReg(IRVariableOperand name, Physical reg) {
+            map.put(name, reg);
+        }
 
-    @Override
-    public String toString() {
-        return idx < 32 ? "$" + registers[idx] : "$" + idx;
-    }
+        public static void putReg(IRVariableOperand name, String reg) {
+            putReg(name, get(reg));
+        }
 
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof Register r && r.idx == idx;
-    }
+        public static Physical get(String name) {
+            for (int i = 0; i < 32; i++) {
+                if (name.equals(registers[i].name)) return registers[i];
+            }
+            throw new IllegalArgumentException("Invalid physical register name: " + name);
+        }
 
-    public boolean isNotT() {
-        return idx < 8 || idx > 15 && idx < 24 || idx > 25;
-    }
+        public static Physical[] registers = new Physical[32];
 
-    public static String[] registers = {
-            "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
-            "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
-    "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
-    "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"
-    };
+        public static String[] regNames = {
+                "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
+                "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+                "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+                "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra"
+        };
+
+        static {
+            for (int i = 0; i < 32; i++) registers[i] = new Physical(i, "$" + regNames[i]);
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 }

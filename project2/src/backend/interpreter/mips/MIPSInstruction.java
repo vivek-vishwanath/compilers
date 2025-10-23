@@ -208,29 +208,4 @@ public class MIPSInstruction {
                 return null;
         }
     }
-
-    public void virtualToPhysical() {
-        HashSet<Integer> regs = new HashSet<>();
-        int tRegNum = 0;
-        for (MIPSOperand operand : operands) {
-            if (operand instanceof Register register) {
-                if (!register.isVirtual()) {
-                    regs.add(register.idx);
-                }
-            }
-        }
-        for (MIPSOperand operand : operands) {
-            if (operand instanceof Register register && register.isVirtual()) {
-                String oldName = register.name();
-                String newName = "$t" + tRegNum;
-                while (regs.contains(Register.getIdx(newName))) {
-                    tRegNum++;
-                    newName = "$t" + tRegNum;
-                }
-                register.setRegister(newName);
-                register.oldName = oldName;
-                regs.add(Register.getIdx(newName));
-            }
-        }
-    }
 }

@@ -15,4 +15,14 @@ public class IRVariableOperand extends IROperand {
     public String getName() {
         return value;
     }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRVariableOperand && ((IRVariableOperand) obj).value.equals(value);
+    }
 }

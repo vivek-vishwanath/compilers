@@ -130,7 +130,7 @@ public class MIPSReader {
                     }
                     labels.put(label, nextAddr);
                 } else if (token.matches(registerPat)) {
-                    operands.add(new Register(token));
+                    operands.add(Register.Physical.get(token));
                 } else if (token.matches(immHexPat)) {
                     if (isWord) {
                         data.put(nextAddr, Integer.decode(token));
@@ -152,7 +152,7 @@ public class MIPSReader {
                 } else if (token.matches(addrPCRelativePat)) {
                     operands.add(new Addr(token));
                 } else if (token.matches(addrRegisterPat)) {
-                    Register reg = new Register(token.replaceAll("\\(|\\)", ""));
+                    Register reg = Register.Physical.get(token.replaceAll("\\(|\\)", ""));
                     operands.add(new Addr(reg));
                 } else if (token.matches(addrBaseOffPat)) {
                     int i = token.indexOf('(');
@@ -161,7 +161,7 @@ public class MIPSReader {
 
                     String base = token.substring(i);
                     operands.add(new Addr(imm,
-                            new Register(base.replaceAll("\\(|\\)", ""))));
+                            Register.Physical.get(base.replaceAll("\\(|\\)", ""))));
                 } else {
                     throw new ParseException("unknown token: " + token + " (@ line " + lineNum + ")");
                 }
