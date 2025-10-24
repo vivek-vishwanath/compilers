@@ -24,7 +24,7 @@ public class Generator {
         for (IRFunction function : program.functions) {
             writer.write(function.name + ":\n");
             function.compileToMIPS();
-            function.intraBlockAlloc();
+            function.allocate(args[2]);
             function.print(writer, true);
             writer.write("\n");
             writer.flush();

@@ -2,8 +2,6 @@ package backend;
 
 import backend.interpreter.mips.MIPSInstruction;
 import backend.interpreter.mips.MIPSOp;
-import backend.interpreter.mips.operand.Addr;
-import backend.interpreter.mips.operand.Imm;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
 import ir.IRFunction;
@@ -36,14 +34,11 @@ public class Block {
             Register write = mipsInstruction.getWrite();
             for (Register reg : reads) {
                 if (reg instanceof Register.Virtual vReg) {
-                    vReg.start = -1;
-                    vReg.end = -1;
-                    // TODO: Clear everything
+                    vReg.reset();
                 }
             }
             if (write instanceof Register.Virtual vReg) {
-                vReg.start = -1;
-                vReg.end = -1;
+                vReg.reset();;
             }
         }
         for (int i = 0; i < mipsInst.size(); i++) {

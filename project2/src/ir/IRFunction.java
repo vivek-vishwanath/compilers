@@ -121,18 +121,8 @@ public class IRFunction {
         }
     }
 
-    public void naiveAlloc() {
-        HashMap<IRVariableOperand, Integer> stackLocations = new HashMap<>();
-        Register fp = Register.Physical.get("$fp");
-        Register sp = Register.Physical.get("$sp");
-        Register ra = Register.Physical.get("$ra");
-        int stackSize = 4 * Register.numRegs();
-        int stackEdge = stackSize - 4;
-        Imm stackOff = new Imm("" + -stackSize, Imm.ImmType.INT);
-        mipsInstructions.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", Imm.ImmType.INT), sp)));
-        mipsInstructions.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", Imm.ImmType.INT)));
-        mipsInstructions.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
-        mipsInstructions.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
+    // start $t# register allocation at number "start"
+    public void naiveAlloc(MStack stack, int start) {
         for (int i = 0; i < mipsInstructions.size(); i++) {
             MIPSInstruction instruction = mipsInstructions.get(i);
             Register[] reads = instruction.getReads();
@@ -142,18 +132,10 @@ public class IRFunction {
                 while (instruction.operands.get(n) != reads[0]) n++;
             for (int j = 0; j < reads.length; j++) {
                 Register read = reads[j];
-                // only t regs were once virtual and need a mapping on the stack
                 if (!(read instanceof Register.Virtual vreg)) continue;
-                Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
-                if (stackIdx == null) {
-                    stackIdx = stackEdge;
-                    stackLocations.put(vreg.var, stackEdge);
-                    stackEdge -= 4;
-                }
-                Register.Physical physical = Register.Physical.get("$t" + (j + 1));
+                Addr address = stack.get(vreg);
+                Register.Physical physical = Register.Physical.get("$t" + (start + 1));
                 instruction.operands.set(n + j, physical);
-                Imm offset = new Imm("" + stackIdx, Imm.ImmType.INT);
-                Addr address = new Addr(offset, sp);
                 // insert right before current instruction
                 String label = null;
                 if (mipsInstructions.get(i).label != null) {
@@ -164,32 +146,26 @@ public class IRFunction {
                 i++; // move i down by 1
             }
             if (write instanceof Register.Virtual vreg) {
-                Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
-                if (stackIdx == null) {
-                    stackIdx = stackEdge;
-                    stackLocations.put(vreg.var, stackEdge);
-                    stackEdge -= 4;
-                }
-                Register.Physical physical = Register.Physical.get("$t0");
+                Addr address = stack.get(vreg);
+                Register.Physical physical = Register.Physical.get("$t" + start);
                 instruction.operands.set(0, physical);
-                Imm offset = new Imm("" + stackIdx, Imm.ImmType.INT);
-                Addr address = new Addr(offset, sp);
                 // add after current instruction
                 mipsInstructions.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
                 i++; // point i to sw instruction and i++ in for loop will skip over it
             }
         }
-        mipsInstructions.add(new MIPSInstruction(MIPSOp.ADDI, name + "_teardown", sp, fp, new Imm("8", Imm.ImmType.INT)));
-        mipsInstructions.add(new MIPSInstruction(MIPSOp.LW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
-        mipsInstructions.add(new MIPSInstruction(MIPSOp.LW, null, fp, new Addr(new Imm("0", Imm.ImmType.INT), fp)));
-        mipsInstructions.add(new MIPSInstruction(MIPSOp.JR, null, Register.Physical.get("$ra")));
     }
 
-    public void intraBlockAlloc() {
+    public void allocate(String type) {
         MStack stack = new MStack();
         stack.buildup();
-        for (Block block : blocks) {
-            block.intraBlockAlloc(stack);
+        if (type == "naive") {
+            naiveAlloc(stack, 0);
+        } else {
+            for (Block block : blocks) {
+                block.intraBlockAlloc(stack);
+            }
+            naiveAlloc(stack, 8);
         }
         stack.teardown();
     }
