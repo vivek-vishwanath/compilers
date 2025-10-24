@@ -7,6 +7,7 @@ import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.Imm;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
+import ir.datatype.IRArrayType;
 import ir.operand.*;
 
 import java.util.ArrayList;
@@ -97,6 +98,15 @@ public class IRInstruction {
             block.mipsInst.add(instruction);
         }
 
+        private Register initializeArrayOrDoNothing(IRVariableOperand arr) {
+            Register register = Register.getVar(arr);
+//            (IRArrayType)(arr.type)
+            if (register != null) return register;
+            append(MIPSOp.LI, label, block, Register.Physical.get("$a0"), new Imm((IRArrayType)(arr.type).getSize(), Imm.ImmType.INT));
+            // insert sbrk syscall here
+            return Register.Virtual.issueVar(arr);
+        }
+
         public void compileCall(int start) {
             for (int i = start + 4; i < operands.length; i++) {
                 Addr addr = new Addr(new Imm("" + (3 - i) * 4, Imm.ImmType.INT), Register.Physical.get("$sp"));
@@ -120,7 +130,16 @@ public class IRInstruction {
         public void compile() {
             switch (opCode) {
                 case ASSIGN -> {
-                    if (operands[1] instanceof IRConstantOperand)
+                    if (((IRVariableOperand)operands[0]).type instanceof IRArrayType) {
+                        Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[0]);
+                        for (int i = 0; i < Integer.parseInt(operands[1].toString()); i++) {
+                            // insert sw instruction
+                            Imm offset = new Imm("" + 4*i, Imm.ImmType.INT);
+                            Addr address = new Addr(offset, base);
+                            append(MIPSOp.SW, label, block, Register.Virtual.issueVar(operands[2]), address);
+                        }
+                    }
+                    else if (operands[1] instanceof IRConstantOperand)
                         append(MIPSOp.LI, label, block, Register.Virtual.issueVar(operands[0]), new Imm(operands[1].toString(), Imm.ImmType.INT));
                     else
                         append(MIPSOp.MOVE, label, block, Register.Virtual.issueVar(operands[0]), Register.getVar(operands[1]));
@@ -192,6 +211,18 @@ public class IRInstruction {
                         compileCall(2);
                     }
                     append(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(operands[0]), v0);
+                }
+                case ARRAY_LOAD -> {
+                    Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[1]);
+                    Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
+                    Addr address = new Addr(offset, base);
+                    append(MIPSOp.LW, label, block, Register.Virtual.issueVar(operands[0]), address);
+                }
+                case ARRAY_STORE -> {
+                    Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[1]);
+                    Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
+                    Addr address = new Addr(offset, base);
+                    append(MIPSOp.SW, label, block, Register.Virtual.getVar(operands[0]), address);
                 }
                 case null, default -> {}
             }
