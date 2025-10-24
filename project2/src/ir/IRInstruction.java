@@ -83,7 +83,7 @@ public class IRInstruction {
 
         private String label;
         private String functionName;
-        private ArrayList<MIPSInstruction> list;
+        ArrayList<MIPSInstruction> list;
 
         public Selector(String label, String functionName) {
             this.label = label;
@@ -97,7 +97,27 @@ public class IRInstruction {
             block.mipsInst.add(instruction);
         }
 
-        public ArrayList<MIPSInstruction> compile() {
+        public void compileCall(int start) {
+            for (int i = start + 4; i < operands.length; i++) {
+                Addr addr = new Addr(new Imm("" + (3 - i) * 4, Imm.ImmType.INT), Register.Physical.get("$sp"));
+                if (operands[i] instanceof IRConstantOperand) {
+                    Register.Physical a0 = Register.Physical.get("$a0");
+                    append(MIPSOp.LI, null, block, a0, new Imm(operands[i].toString(), Imm.ImmType.INT));
+                    append(MIPSOp.SW, null, block, a0, addr);
+                } else {
+                    append(MIPSOp.SW, null, block, Register.Virtual.getVar(operands[i]), addr);
+                }
+            }
+            for (int i = start; i < Math.min(operands.length, start + 4); i++) {
+                if (operands[i] instanceof IRVariableOperand)
+                    append(MIPSOp.MOVE, i == start ? label : null, block, Register.Physical.get("$a" + (i-start)), Register.Virtual.getVar(operands[i]));
+                else if (operands[i] instanceof IRConstantOperand)
+                    append(MIPSOp.LI, i == start ? label : null, block, Register.Physical.get("$a" + (i-start)), new Imm(operands[i].toString(), Imm.ImmType.INT));
+            }
+            append(MIPSOp.JAL, operands.length == 0 ? label : null, block, new Addr(operands[1].toString()));
+        }
+
+        public void compile() {
             switch (opCode) {
                 case ASSIGN -> {
                     if (operands[1] instanceof IRConstantOperand)
@@ -138,8 +158,8 @@ public class IRInstruction {
                 case RETURN -> {
                     if (operands[0] instanceof IRConstantOperand) {
                         append(MIPSOp.LI, label, block, v0, new Imm(operands[0].toString(), Imm.ImmType.INT));
-                    } else {
-                        append(MIPSOp.LA, label, block, v0, Register.Virtual.getVar(operands[0]));
+                    } else if (operands[0] instanceof IRVariableOperand) {
+                        append(MIPSOp.MOVE, label, block, v0, Register.Virtual.getVar(operands[0]));
                     }
                     append(MIPSOp.J, null, block, new Addr(functionName + "_teardown"));
                 }
@@ -161,27 +181,20 @@ public class IRInstruction {
                         }
                         append(MIPSOp.SYSCALL, null, block);
                     } else {
-                        for (int i = 1; i < operands.length; i++)
-                            append(MIPSOp.MOVE, i == 1 ? label : null, block, Register.Physical.get("$a" + (i - 1)), Register.Virtual.issueVar(operands[i]));
-                        append(MIPSOp.JAL, operands.length > 1 ? null : label, block, new Addr(operands[0].toString()));
+                        compileCall(1);
                     }
                 }
                 case CALLR -> {
                     if (operands[1] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[1]).getName().equals("geti")) {
                         append(MIPSOp.LI, label, block, v0, new Imm("5", Imm.ImmType.INT));
                         append(MIPSOp.SYSCALL, null, block);
-                        append(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(operands[0]), v0);
                     } else {
-                        for (int i = 2; i < operands.length; i++)
-                            append(MIPSOp.MOVE, i == 2 ? label : null, block, Register.Physical.get("$a" + (i - 2)), Register.Virtual.issueVar(operands[i]));
-                        append(MIPSOp.JAL, operands.length > 2 ? null : label, block, new Addr(operands[1].toString()));
-                        append(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(operands[0]), v0);
+                        compileCall(2);
                     }
+                    append(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(operands[0]), v0);
                 }
-                case null, default -> {
-                }
+                case null, default -> {}
             }
-            return list;
         }
     }
 

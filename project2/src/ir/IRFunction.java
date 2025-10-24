@@ -101,6 +101,10 @@ public class IRFunction {
             IRVariableOperand op = parameters.get(i);
             Register.Physical.putReg(op, "$a" + i);
         }
+        for (int i = 4; i < parameters.size(); i++) {
+            IRVariableOperand op = parameters.get(i);
+            Register.Virtual.issueVar(op);
+        }
         for (IRInstruction instruction : irInstructions) {
             for (int i = 0; i < instruction.operands.length; i++) {
                 IROperand operand = instruction.operands[i];
@@ -114,9 +118,9 @@ public class IRFunction {
                 continue;
             }
             IRInstruction.Selector selector = instruction.new Selector(label, name);
-            ArrayList<MIPSInstruction> list = selector.compile();
-            list.forEach(it -> System.out.println("\t\t" + it));
-            mipsInstructions.addAll(list);
+            selector.compile();
+            selector.list.forEach(it -> System.out.println("\t\t" + it));
+            mipsInstructions.addAll(selector.list);
             label = null;
         }
     }
@@ -222,8 +226,12 @@ public class IRFunction {
         Register ra = Register.Physical.get("$ra");
 
         public void buildup() {
+            for (int i = 4; i < parameters.size(); i++) {
+                IRVariableOperand op = parameters.get(i);
+                locations.put(op, stackSize + (i - 4) * 4);
+            }
             Block block = new Block();
-            Imm stackOff = new Imm("" + -stackSize, Imm.ImmType.INT);
+            Imm stackOff = new Imm("" + ((4 - Math.max(parameters.size(), 4)) * 4 - stackSize), Imm.ImmType.INT);
             block.mipsInst.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", Imm.ImmType.INT), sp)));
             block.mipsInst.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", Imm.ImmType.INT)));
             block.mipsInst.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));

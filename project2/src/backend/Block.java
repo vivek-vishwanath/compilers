@@ -36,32 +36,34 @@ public class Block {
             Register write = mipsInstruction.getWrite();
             for (Register reg : reads) {
                 if (reg instanceof Register.Virtual vReg) {
-                    vReg.start = -1;
-                    vReg.end = -1;
+                    vReg.start = null;
+                    vReg.end = null;
+                    vReg.readCount = 0;
                     // TODO: Clear everything
                 }
             }
             if (write instanceof Register.Virtual vReg) {
-                vReg.start = -1;
-                vReg.end = -1;
+                vReg.start = null;
+                vReg.end = null;
+                vReg.readCount = 0;
             }
         }
         for (int i = 0; i < mipsInst.size(); i++) {
             Register[] reads = mipsInst.get(i).getReads();
             for (Register reg : reads) {
                 if (!(reg instanceof Register.Virtual vReg)) continue;
-                if (vReg.start == -1) {
-                    vReg.start = i;
+                if (vReg.start == null) {
+                    vReg.start = new Register.Virtual.Snapshot(i, false);
                     vReg.noWrite = true;
                 }
-                vReg.end = i;
+                vReg.end = new Register.Virtual.Snapshot(i, true);
                 vReg.readCount++;
                 vRegSet.add(vReg);
             }
             Register write = mipsInst.get(i).getWrite();
             if (write instanceof Register.Virtual vReg) {
-                vReg.start = i + 1;
-                vReg.end = -1;
+                vReg.start = new Register.Virtual.Snapshot(i, true);
+                vReg.end = new Register.Virtual.Snapshot(i + 1, false);
                 vRegSet.add(vReg);
             }
         }
@@ -71,7 +73,7 @@ public class Block {
             for (int j = 0; j < i; j++) {
                 Register.Virtual reg1 = vRegList.get(i);
                 Register.Virtual reg2 = vRegList.get(j);
-                if (reg1.start <= reg2.end && reg1.end >= reg2.start) {
+                if (reg1.start.compareTo(reg2.end) <= 0 && reg1.end.compareTo(reg2.start) >= 0) {
                     reg1.concurrentAlives.add(reg2);
                     reg2.concurrentAlives.add(reg1);
                 }
@@ -108,14 +110,14 @@ public class Block {
                 }
             }
         }
-        vRegList.sort(Comparator.comparingInt(v -> -v.start));
+        vRegList.sort(Comparator.comparing(v -> -(v.start.idx * 2 + (v.start.after ? 1 : 0))));
         for (Register.Virtual vreg : vRegList) {
             if (vreg.noWrite) {
-                String label = mipsInst.get(vreg.start).label;
-                mipsInst.get(vreg.start).label = null;
-                mipsInst.add(vreg.start, new MIPSInstruction(MIPSOp.LW, label, this, vreg.physicalReg, stack.get(vreg)));
+                String label = mipsInst.get(vreg.start.idx).label;
+                mipsInst.get(vreg.start.idx).label = null;
+                mipsInst.add(vreg.start.idx, new MIPSInstruction(MIPSOp.LW, label, this, vreg.physicalReg, stack.get(vreg)));
             } else {
-                mipsInst.add(vreg.start, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
+                mipsInst.add(vreg.start.idx + 1, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
             }
         }
     }

@@ -5,7 +5,6 @@ import ir.operand.IRVariableOperand;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -37,8 +36,8 @@ public abstract class Register extends MIPSOperand {
     public static class Virtual extends Register implements Comparable<Register.Virtual> {
 
         public IRVariableOperand var;
-        public int start = -1;
-        public int end;
+        public Snapshot start;
+        public Snapshot end;
         public int readCount;
         public HashSet<Register.Virtual> concurrentAlives = new HashSet<>();
         public boolean isSpilled;
@@ -79,18 +78,19 @@ public abstract class Register extends MIPSOperand {
             return that.readCount - this.readCount;
         }
 
-        public class Sortable implements Comparable<Register.Virtual.Sortable> {
-            int idx;
-            boolean isStart;
+        public static class Snapshot implements Comparable<Snapshot> {
+            public int idx;
+            public boolean after;
 
-            public Sortable(int idx, boolean isStart) {
+            public Snapshot(int idx, boolean after) {
                 this.idx = idx;
-                this.isStart = isStart;
+                this.after = after;
             }
 
             @Override
-            public int compareTo(@NotNull Sortable sortable) {
-                return Integer.compare(sortable.idx, this.idx);
+            public int compareTo(Snapshot other) {
+                int cmp = Integer.compare(this.idx, other.idx);
+                return cmp == 0 ? Boolean.compare(this.after, other.after) : cmp;
             }
         }
     }
