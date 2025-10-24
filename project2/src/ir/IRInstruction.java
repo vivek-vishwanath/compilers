@@ -100,10 +100,10 @@ public class IRInstruction {
 
         private Register initializeArrayOrDoNothing(IRVariableOperand arr) {
             Register register = Register.getVar(arr);
-            (IRArrayType)(arr.type)
             if (register != null) return register;
-            append(MIPSOp.LI, label, block, Register.Physical.get("$a0"), new Imm((IRArrayType)(arr.type).getSize(), Imm.ImmType.INT));
-            // insert sbrk syscall here
+            append(MIPSOp.LI, label, block, Register.Physical.get("$a0"), new Imm("" + ((IRArrayType)arr.type).getSize(), Imm.ImmType.INT));
+            append(MIPSOp.LI, label, block, v0, new Imm("9", Imm.ImmType.INT));
+            append(MIPSOp.SYSCALL, null, block);
             return Register.Virtual.issueVar(arr);
         }
 
