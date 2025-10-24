@@ -51,7 +51,8 @@ public class Generator {
                     label = instruction.operands[0].toString();
                     continue;
                 }
-                ArrayList<MIPSInstruction> list = instruction.compile(label, function.name);
+                IRInstruction.Selector selector = instruction.new Selector(label, function.name);
+                ArrayList<MIPSInstruction> list = selector.compile();
                 list.forEach(it -> System.out.println("\t\t" + it));
                 instructions.addAll(list);
                 label = null;
@@ -83,10 +84,10 @@ public class Generator {
         int stackSize = 4 * Register.numRegs();
         int stackEdge = stackSize - 4;
         Imm stackOff = new Imm("" + -stackSize, ImmType.INT);
-        list.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", ImmType.INT), sp)));
-        list.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", ImmType.INT)));
-        list.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
-        list.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
+        list.add(0, new MIPSInstruction(MIPSOp.SW, null, null, fp, new Addr(new Imm("-8", ImmType.INT), sp)));
+        list.add(1, new MIPSInstruction(MIPSOp.ADDI, null, null, fp, sp, new Imm("-8", ImmType.INT)));
+        list.add(2, new MIPSInstruction(MIPSOp.SW, null, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
+        list.add(3, new MIPSInstruction(MIPSOp.ADDI, null, null, sp, fp, stackOff));
         for (int i = 0; i < list.size(); i++) {
             MIPSInstruction instruction = list.get(i);
             Register[] reads = instruction.getReads();
@@ -114,7 +115,7 @@ public class Generator {
                     label = list.get(i).label;
                     list.get(i).label = null;
                 }
-                list.add(i, new MIPSInstruction(MIPSOp.LW, label, physical, address));
+                list.add(i, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
                 i++; // move i down by 1
             }
             if (write != null) {
@@ -130,14 +131,14 @@ public class Generator {
                     Imm offset = new Imm("" + stackIdx, ImmType.INT);
                     Addr address = new Addr(offset, sp);
                     // add after current instruction
-                    list.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, physical, address));
+                    list.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
                     i++; // point i to sw instruction and i++ in for loop will skip over it
                 }
             }
         }
-        list.add(new MIPSInstruction(MIPSOp.ADDI, functionName + "_teardown", sp, fp, new Imm("8", ImmType.INT)));
-        list.add(new MIPSInstruction(MIPSOp.LW, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
-        list.add(new MIPSInstruction(MIPSOp.LW, null, fp, new Addr(new Imm("0", ImmType.INT), fp)));
-        list.add(new MIPSInstruction(MIPSOp.JR, null, Register.Physical.get("$ra")));
+        list.add(new MIPSInstruction(MIPSOp.ADDI, functionName + "_teardown", null, sp, fp, new Imm("8", ImmType.INT)));
+        list.add(new MIPSInstruction(MIPSOp.LW, null, null, ra, new Addr(new Imm("4", ImmType.INT), fp)));
+        list.add(new MIPSInstruction(MIPSOp.LW, null, null, fp, new Addr(new Imm("0", ImmType.INT), fp)));
+        list.add(new MIPSInstruction(MIPSOp.JR, null, null, Register.Physical.get("$ra")));
     }
 }

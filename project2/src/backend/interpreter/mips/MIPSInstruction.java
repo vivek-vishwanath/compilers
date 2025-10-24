@@ -1,13 +1,11 @@
 package backend.interpreter.mips;
 
+import backend.Block;
 import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
-import ir.operand.IROperand;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 public class MIPSInstruction {
@@ -50,11 +48,12 @@ public class MIPSInstruction {
     public MIPSOp op;
     public String label;
     public List<MIPSOperand> operands;
+    public Block block;
 
-
-    public MIPSInstruction(MIPSOp op, String label, MIPSOperand... operands) {
+    public MIPSInstruction(MIPSOp op, String label, Block block, MIPSOperand... operands) {
         this.op = op;
         this.label = label;
+        this.block = block;
         this.operands = Arrays.asList(operands);
     }
 

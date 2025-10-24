@@ -150,6 +150,14 @@ public class IRReader {
                 }
             }
 
+        for (IRFunction f : functions) {
+            for (IRInstruction inst : f.instructions) {
+                if (inst.opCode == IRInstruction.OpCode.LABEL) {
+                    f.labelMap.put(((IRLabelOperand) inst.operands[0]).getName(), inst);
+                }
+            }
+        }
+
         return new IRProgram(functions);
     }
 
