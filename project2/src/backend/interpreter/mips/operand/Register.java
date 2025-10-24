@@ -4,7 +4,9 @@ import ir.operand.IROperand;
 import ir.operand.IRVariableOperand;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 public abstract class Register extends MIPSOperand {
@@ -31,9 +33,15 @@ public abstract class Register extends MIPSOperand {
         return map.getOrDefault(var, null);
     }
 
-    public static class Virtual extends Register {
+    public static class Virtual extends Register implements Comparable<Register.Virtual> {
 
         public IRVariableOperand var;
+        public int start;
+        public int end;
+        public int readCount;
+        public HashSet<Register.Virtual> concurrentAlives;
+        public boolean isSpilled;
+        public Register.Physical physicalReg;
 
         public Virtual(int idx) {
             super(idx);
@@ -62,6 +70,11 @@ public abstract class Register extends MIPSOperand {
         @Override
         public String toString() {
             return name();
+        }
+
+        @Override
+        public int compareTo(Register.Virtual that) {
+            return that.readCount - this.readCount;
         }
     }
 
