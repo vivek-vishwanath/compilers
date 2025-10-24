@@ -1,0 +1,37 @@
+#start_function
+void test(int a, int[100] b, int[100] c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, int n, int o, int p, int q, int r, int s, int t, int u, int v, int w, int x, int y, int z):
+    assign a, 1
+#end_function
+
+#start_function
+void main():
+int-list: a, b[100], c[100], d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+float-list:
+    assign, a, 0
+    assign, b, 100, 10
+    array_store, 9, c, 7
+    array_load, d, c, 7
+    assign, e, 0
+    assign, f, 0
+    assign, g, 0
+    assign, h, 0
+    assign, i, 0
+    assign, j, 0
+    assign, k, 0
+    assign, l, 0
+    assign, m, 0
+    assign, n, 0
+    assign, o, 0
+    assign, p, 0
+    assign, q, 0
+    assign, r, 0
+    assign, s, 0
+    assign, t, 0
+    assign, u, 0
+    assign, v, 0
+    assign, w, 0
+    assign, x, 0
+    assign, y, 0
+    assign, z, 0
+    call, test, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+#end_function
