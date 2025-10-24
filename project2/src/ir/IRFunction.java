@@ -188,6 +188,10 @@ public class IRFunction {
                     mipsInstructions.get(i).label = null;
                 }
                 mipsInstructions.add(i, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
+                if (instruction.block != null) {
+                    int idx = instruction.block.mipsInst.indexOf(instruction);
+                    instruction.block.mipsInst.add(idx, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
+                }
                 i++; // move i down by 1
             }
             if (write instanceof Register.Virtual vreg) {
@@ -196,6 +200,10 @@ public class IRFunction {
                 instruction.operands.set(0, physical);
                 // add after current instruction
                 mipsInstructions.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
+                if (instruction.block != null) {
+                    int idx = instruction.block.mipsInst.indexOf(instruction);
+                    instruction.block.mipsInst.add(idx + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
+                }
                 i++; // point i to sw instruction and i++ in for loop will skip over it
             }
         }
@@ -249,11 +257,12 @@ public class IRFunction {
             }
             Block block = new Block();
             Imm stackOff = new Imm("" + ((4 - Math.max(parameters.size(), 4)) * 4 - stackSize), Imm.ImmType.INT);
-            block.mipsInst.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", Imm.ImmType.INT), sp)));
-            block.mipsInst.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", Imm.ImmType.INT)));
-            block.mipsInst.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
-            block.mipsInst.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
+            block.mipsInst.add(0, new MIPSInstruction(MIPSOp.SW, null, block, fp, new Addr(new Imm("-8", Imm.ImmType.INT), sp)));
+            block.mipsInst.add(1, new MIPSInstruction(MIPSOp.ADDI, null, block, fp, sp, new Imm("-8", Imm.ImmType.INT)));
+            block.mipsInst.add(2, new MIPSInstruction(MIPSOp.SW, null, block, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
+            block.mipsInst.add(3, new MIPSInstruction(MIPSOp.ADDI, null, block, sp, fp, stackOff));
             blocks.add(0, block);
+            mipsInstructions.addAll(0, block.mipsInst);
         }
 
         public void teardown() {
@@ -263,6 +272,7 @@ public class IRFunction {
             block.mipsInst.add(new MIPSInstruction(MIPSOp.LW, null, fp, new Addr(new Imm("0", Imm.ImmType.INT), fp)));
             block.mipsInst.add(new MIPSInstruction(MIPSOp.JR, null, Register.Physical.get("$ra")));
             blocks.add(block);
+            mipsInstructions.addAll(block.mipsInst);
         }
 
         public Addr get(Register.Virtual vreg) {
