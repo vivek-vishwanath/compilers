@@ -1,0 +1,36 @@
+#start_function
+int divisible(int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, int n, int o, int p, int q, int r, int s, int t, int u, int v, int w, int x, int y, int z):
+#end_function
+
+#start_function
+void main():
+int-list: a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+float-list:
+    assign, a, 1
+    assign, b, 1
+    assign, c, 1
+    assign, d, 1
+    assign, e, 1
+    assign, f, 1
+    assign, g, 1
+    assign, h, 1
+    assign, i, 1
+    assign, j, 1
+    assign, k, 1
+    assign, l, 1
+    assign, m, 1
+    assign, n, 1
+    assign, o, 1
+    assign, p, 1
+    assign, q, 1
+    assign, r, 1
+    assign, s, 1
+    assign, t, 1
+    assign, u, 1
+    assign, v, 1
+    assign, w, 1
+    assign, x, 1
+    assign, y, 1
+    assign, z, 1
+    call, test, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+#end_function
