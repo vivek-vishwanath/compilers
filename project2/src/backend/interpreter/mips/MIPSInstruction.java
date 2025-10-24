@@ -58,9 +58,7 @@ public class MIPSInstruction {
     }
 
     public MIPSInstruction(MIPSOp op, String label, MIPSOperand... operands) {
-        this.op = op;
-        this.label = label;
-        this.operands = Arrays.asList(operands);
+        this(op, label, null, operands);
     }
 
     public boolean isBranch() {

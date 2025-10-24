@@ -2,6 +2,7 @@ package backend;
 
 import backend.interpreter.mips.MIPSInstruction;
 import backend.interpreter.mips.MIPSOp;
+import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
 import ir.IRFunction;
@@ -38,7 +39,7 @@ public class Block {
                 }
             }
             if (write instanceof Register.Virtual vReg) {
-                vReg.reset();;
+                vReg.reset();
             }
         }
         for (int i = 0; i < mipsInst.size(); i++) {
@@ -66,7 +67,7 @@ public class Block {
             for (int j = 0; j < i; j++) {
                 Register.Virtual reg1 = vRegList.get(i);
                 Register.Virtual reg2 = vRegList.get(j);
-                if (reg1.start.compareTo(reg2.end) <= 0 && reg1.end.compareTo(reg2.start) >= 0) {
+                if (reg1.start.compareTo(reg2.end) < 0 && reg1.end.compareTo(reg2.start) > 0) {
                     reg1.concurrentAlives.add(reg2);
                     reg2.concurrentAlives.add(reg1);
                 }
@@ -90,7 +91,7 @@ public class Block {
             ArrayList<Register.Physical> copy = new ArrayList<>(physicalRegs);
             copy.removeAll(usedList);
             if (!copy.isEmpty()) {
-                reg1.physicalReg = copy.getFirst();
+                reg1.physicalReg = copy.get(0);
             } else {
                 reg1.isSpilled = true;
             }
@@ -101,6 +102,13 @@ public class Block {
                 if (operands.get(i) instanceof Register.Virtual vreg) {
                     operands.set(i, vreg.physicalReg);
                 }
+                if (operands.get(i) instanceof Addr addr && addr.register instanceof Register.Virtual vreg) {
+                    if (addr.mode == Addr.Mode.BASE_OFFSET) {
+                        operands.set(i, new Addr(addr.constant, vreg.physicalReg));
+                    } else if (addr.mode == Addr.Mode.REGISTER) {
+                        operands.set(i, new Addr(vreg.physicalReg));
+                    }
+                }
             }
         }
         vRegList.sort(Comparator.comparing(v -> -(v.start.idx * 2 + (v.start.after ? 1 : 0))));
@@ -110,7 +118,8 @@ public class Block {
                 mipsInst.get(vreg.start.idx).label = null;
                 mipsInst.add(vreg.start.idx, new MIPSInstruction(MIPSOp.LW, label, this, vreg.physicalReg, stack.get(vreg)));
             } else {
-                mipsInst.add(vreg.start.idx + 1, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
+                if (vreg.var != null)
+                    mipsInst.add(vreg.start.idx + 1, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
             }
         }
     }

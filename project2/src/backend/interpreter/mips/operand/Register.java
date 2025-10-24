@@ -18,9 +18,9 @@ public abstract class Register extends MIPSOperand {
 
     public abstract String name();
 
-    private static HashMap<IRVariableOperand, Register> map = new HashMap<>();
+    public static HashMap<IRVariableOperand, Register> map = new HashMap<>();
 
-    public void reset() {
+    public static void clear() {
         map = new HashMap<>();
     }
 
@@ -99,8 +99,7 @@ public abstract class Register extends MIPSOperand {
 
             @Override
             public int compareTo(Snapshot other) {
-                int cmp = Integer.compare(this.idx, other.idx);
-                return cmp == 0 ? Boolean.compare(this.after, other.after) : cmp;
+                return Integer.compare(this.idx * 2 + (this.after ? 1 : 0), other.idx * 2 + (other.after ? 1 : 0));
             }
         }
     }

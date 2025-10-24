@@ -98,16 +98,6 @@ public class IRInstruction {
             block.mipsInst.add(instruction);
         }
 
-        private Register initializeArrayOrDoNothing(IRVariableOperand arr) {
-            Register register = Register.getVar(arr);
-//            (IRArrayType)(arr.type)
-            if (register != null) return register;
-            append(MIPSOp.LI, label, block, Register.Physical.get("$a0"), new Imm("" + ((IRArrayType)arr.type).getSize(), Imm.ImmType.INT));
-            append(MIPSOp.LI, label, block, v0, new Imm("9", Imm.ImmType.INT));
-            append(MIPSOp.SYSCALL, null, block);
-            return Register.Virtual.issueVar(arr);
-        }
-
         public void compileCall(int start) {
             for (int i = start + 4; i < operands.length; i++) {
                 Addr addr = new Addr(new Imm("" + (3 - i) * 4, Imm.ImmType.INT), Register.Physical.get("$sp"));
@@ -125,19 +115,25 @@ public class IRInstruction {
                 else if (operands[i] instanceof IRConstantOperand)
                     append(MIPSOp.LI, i == start ? label : null, block, Register.Physical.get("$a" + (i-start)), new Imm(operands[i].toString(), Imm.ImmType.INT));
             }
-            append(MIPSOp.JAL, operands.length == 0 ? label : null, block, new Addr(operands[1].toString()));
+            append(MIPSOp.JAL, operands.length == 0 ? label : null, block, new Addr(operands[start - 1].toString()));
         }
 
         public void compile() {
             switch (opCode) {
                 case ASSIGN -> {
                     if (((IRVariableOperand)operands[0]).type instanceof IRArrayType) {
-                        Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[0]);
+                        Register base = Register.getVar(operands[0]);
                         for (int i = 0; i < Integer.parseInt(operands[1].toString()); i++) {
                             // insert sw instruction
                             Imm offset = new Imm("" + 4*i, Imm.ImmType.INT);
                             Addr address = new Addr(offset, base);
-                            append(MIPSOp.SW, label, block, Register.Virtual.issueVar(operands[2]), address);
+                            if (operands[2] instanceof IRVariableOperand)
+                                append(MIPSOp.SW, i == 0 ? label : null, block, Register.Virtual.issueVar(operands[2]), address);
+                            else {
+                                Register.Virtual temp = Register.Virtual.issueTemp();
+                                append(MIPSOp.LI, i == 0 ? label : null, block, temp, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                                append(MIPSOp.SW, null, block, temp, address);
+                            }
                         }
                     }
                     else if (operands[1] instanceof IRConstantOperand)
@@ -153,7 +149,13 @@ public class IRInstruction {
                     }
                     if (operands[2] instanceof IRConstantOperand) {
                         MIPSOperand sr = Register.Virtual.getVar(operands[1]);
-                        append(aluiMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                        if (aluiMap.containsKey(opCode))
+                            append(aluiMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                        else {
+                            Register.Virtual temp = Register.Virtual.issueTemp();
+                            append(MIPSOp.LI, label, block, temp, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                            append(aluMap.get(opCode), null, block, Register.Virtual.issueVar(operands[0]), sr, temp);
+                        }
                     } else {
                         MIPSOperand sr1 = Register.getVar(operands[1]);
                         MIPSOperand sr2 = Register.getVar(operands[2]);
@@ -214,18 +216,38 @@ public class IRInstruction {
                     append(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(operands[0]), v0);
                 }
                 case ARRAY_LOAD -> {
-                    Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[1]);
-                    Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
-                    Addr address = new Addr(offset, base);
-                    append(MIPSOp.LW, label, block, Register.Virtual.issueVar(operands[0]), address);
+                    Register base = Register.getVar(operands[1]);
+                    if (operands[1] instanceof IRConstantOperand) {
+                        Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
+                        Addr address = new Addr(offset, base);
+                        append(MIPSOp.LW, label, block, Register.Virtual.issueVar(operands[0]), address);
+                    } else {
+                        Register.Virtual t1 = Register.Virtual.issueTemp();
+                        Register.Virtual t2 = Register.Virtual.issueTemp();
+                        Register.Virtual t3 = Register.Virtual.issueTemp();
+                        append(MIPSOp.LI, label, block, t1, new Imm("4", Imm.ImmType.INT));
+                        append(MIPSOp.MUL, null, block, t2, Register.Virtual.getVar(operands[2]), t1);
+                        append(MIPSOp.ADD, null, block, t3, base, t2);
+                        append(MIPSOp.LW, null, block, Register.Virtual.issueVar(operands[0]), new Addr(t3));
+                    }
                 }
                 case ARRAY_STORE -> {
-                    Register base = initializeArrayOrDoNothing((IRVariableOperand)operands[1]);
-                    Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
-                    Addr address = new Addr(offset, base);
-                    append(MIPSOp.SW, label, block, Register.Virtual.getVar(operands[0]), address);
+                    Register base = Register.getVar(operands[1]);
+                    if (operands[1] instanceof IRConstantOperand) {
+                        Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
+                        Addr address = new Addr(offset, base);
+                        append(MIPSOp.SW, label, block, Register.getVar(operands[0]), address);
+                    } else {
+                        Register.Virtual t1 = Register.Virtual.issueTemp();
+                        Register.Virtual t2 = Register.Virtual.issueTemp();
+                        Register.Virtual t3 = Register.Virtual.issueTemp();
+                        append(MIPSOp.LI, label, block, t1, new Imm("4", Imm.ImmType.INT));
+                        append(MIPSOp.MUL, null, block, t2, Register.Virtual.getVar(operands[2]), t1);
+                        append(MIPSOp.ADD, null, block, t3, base, t2);
+                        append(MIPSOp.SW, null, block, Register.Virtual.getVar(operands[0]), new Addr(t3));
+                    }
                 }
-                case null, default -> {}
+                default -> {}
             }
         }
     }

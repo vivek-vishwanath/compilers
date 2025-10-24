@@ -5,4 +5,4 @@
 # the input ir file and a path where the output ir file should
 # be created.
 
-java -cp materials/build backend.Generator $1 $2
+java -cp materials/build backend.Generator $1 $2 $3

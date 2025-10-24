@@ -1,10 +1,12 @@
 package backend;
 
 import backend.interpreter.mips.MemLayout;
+import backend.interpreter.mips.operand.Register;
 import ir.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Objects;
 
 public class Generator {
 
@@ -22,12 +24,14 @@ public class Generator {
         writer.flush();
 
         for (IRFunction function : program.functions) {
+            boolean naive = args.length > 2 && Objects.equals(args[2], "--naive");
             writer.write(function.name + ":\n");
             function.compileToMIPS();
-            function.allocate(args[2]);
-            function.print(writer, true);
+            function.allocate(naive);
+            function.print(writer, !naive);
             writer.write("\n");
             writer.flush();
+            Register.clear();
         }
         writer.close();
 

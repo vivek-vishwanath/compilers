@@ -6,6 +6,7 @@ import backend.interpreter.mips.MIPSOp;
 import backend.interpreter.mips.operand.Addr;
 import backend.interpreter.mips.operand.Imm;
 import backend.interpreter.mips.operand.Register;
+import ir.datatype.IRArrayType;
 import ir.datatype.IRType;
 import ir.operand.IRLabelOperand;
 import ir.operand.IROperand;
@@ -13,10 +14,7 @@ import ir.operand.IRVariableOperand;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class IRFunction {
 
@@ -97,13 +95,30 @@ public class IRFunction {
 
     public void compileToMIPS() {
         String label = null;
+        Block block = new Block();
         for (int i = 0; i < Math.min(parameters.size(), 4); i++) {
             IRVariableOperand op = parameters.get(i);
             Register.Physical.putReg(op, "$a" + i);
+            block.mipsInst.add(new MIPSInstruction(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(op), Register.Physical.get("$a" + i)));
+        }
+        if (!block.mipsInst.isEmpty()) {
+            blocks.add(0, block);
+            mipsInstructions.addAll(block.mipsInst);
         }
         for (int i = 4; i < parameters.size(); i++) {
             IRVariableOperand op = parameters.get(i);
             Register.Virtual.issueVar(op);
+        }
+        for (IRVariableOperand op : variables) {
+            if (op.type instanceof IRArrayType && !parameters.contains(op)) {
+                block = new Block();
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.LI, null, block, Register.Physical.get("$a0"), new Imm("" + ((IRArrayType) op.type).getSize(), Imm.ImmType.INT)));
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.LI, null, block, Register.Physical.get("$v0"), new Imm("9", Imm.ImmType.INT)));
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.SYSCALL, null, block));
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(op), Register.Physical.get("$v0")));
+                blocks.add(0, block);
+                mipsInstructions.addAll(block.mipsInst);
+            }
         }
         for (IRInstruction instruction : irInstructions) {
             for (int i = 0; i < instruction.operands.length; i++) {
@@ -114,14 +129,28 @@ public class IRFunction {
                 }
             }
             if (instruction.opCode == IRInstruction.OpCode.LABEL) {
+                if (label != null) {
+                    Register.Physical zero = Register.Physical.get("$zero");
+                    MIPSInstruction inst = new MIPSInstruction(MIPSOp.ADD, label, instruction.block, zero, zero, zero);
+                    mipsInstructions.add(inst);
+                    instruction.block.mipsInst.add(inst);
+                }
                 label = instruction.operands[0].toString();
                 continue;
             }
             IRInstruction.Selector selector = instruction.new Selector(label, name);
             selector.compile();
-            selector.list.forEach(it -> System.out.println("\t\t" + it));
+//            selector.list.forEach(it -> System.out.println("\t\t" + it));
             mipsInstructions.addAll(selector.list);
             label = null;
+        }
+        if (label != null) {
+            Register.Physical zero = Register.Physical.get("$zero");
+            block = new Block();
+            MIPSInstruction inst = new MIPSInstruction(MIPSOp.ADD, label, block, zero, zero, zero);
+            mipsInstructions.add(inst);
+            block.mipsInst.add(inst);
+            blocks.add(block);
         }
     }
 
@@ -131,16 +160,28 @@ public class IRFunction {
             MIPSInstruction instruction = mipsInstructions.get(i);
             Register[] reads = instruction.getReads();
             Register write = instruction.getWrite();
-            int n = 0;
-            if (reads.length > 0)
-                while (instruction.operands.get(n) != reads[0]) n++;
             for (int j = 0; j < reads.length; j++) {
                 Register read = reads[j];
                 if (!(read instanceof Register.Virtual vreg)) continue;
                 Addr address = stack.get(vreg);
-                Register.Physical physical = Register.Physical.get("$t" + (start + 1));
-                instruction.operands.set(n + j, physical);
-                // insert right before current instruction
+                Register.Physical physical = Register.Physical.get("$t" + (start + j));
+                for (int k = 0; k < instruction.operands.size(); k++) {
+                    if (instruction.operands.get(k) == read) {
+                        instruction.operands.set(k, physical);
+                        break;
+                    }
+                    if (instruction.operands.get(k) instanceof Addr addr) {
+                        if (addr.register == read) {
+                            if (addr.mode == Addr.Mode.BASE_OFFSET) {
+                                Addr newAddr = new Addr(addr.constant, physical);
+                                instruction.operands.set(k, newAddr);
+                            } else {
+                                instruction.operands.set(k, new Addr(physical));
+                            }
+                            break;
+                        }
+                    }
+                }
                 String label = null;
                 if (mipsInstructions.get(i).label != null) {
                     label = mipsInstructions.get(i).label;
@@ -160,10 +201,10 @@ public class IRFunction {
         }
     }
 
-    public void allocate(String type) {
+    public void allocate(boolean naive) {
         MStack stack = new MStack();
         stack.buildup();
-        if (type == "naive") {
+        if (naive) {
             naiveAlloc(stack, 0);
         } else {
             for (Block block : blocks) {
@@ -212,7 +253,7 @@ public class IRFunction {
             block.mipsInst.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", Imm.ImmType.INT)));
             block.mipsInst.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
             block.mipsInst.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
-            blocks.addFirst(block);
+            blocks.add(0, block);
         }
 
         public void teardown() {
