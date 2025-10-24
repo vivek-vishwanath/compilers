@@ -217,7 +217,7 @@ public class IRInstruction {
                 }
                 case ARRAY_LOAD -> {
                     Register base = Register.getVar(operands[1]);
-                    if (operands[1] instanceof IRConstantOperand) {
+                    if (operands[2] instanceof IRConstantOperand) {
                         Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
                         Addr address = new Addr(offset, base);
                         append(MIPSOp.LW, label, block, Register.Virtual.issueVar(operands[0]), address);
@@ -233,10 +233,16 @@ public class IRInstruction {
                 }
                 case ARRAY_STORE -> {
                     Register base = Register.getVar(operands[1]);
-                    if (operands[1] instanceof IRConstantOperand) {
+                    if (operands[2] instanceof IRConstantOperand) {
                         Imm offset = new Imm("" + 4*Integer.parseInt(operands[2].toString()), Imm.ImmType.INT);
                         Addr address = new Addr(offset, base);
-                        append(MIPSOp.SW, label, block, Register.getVar(operands[0]), address);
+                        if (operands[0] instanceof IRVariableOperand)
+                            append(MIPSOp.SW, label, block, Register.getVar(operands[0]), address);
+                        else if (operands[0] instanceof IRConstantOperand) {
+                            Register.Virtual temp = Register.Virtual.issueTemp();
+                            append(MIPSOp.LI, label, block, temp, new Imm(operands[0].toString(), Imm.ImmType.INT));
+                            append(MIPSOp.SW, null, block, temp, address);
+                        }
                     } else {
                         Register.Virtual t1 = Register.Virtual.issueTemp();
                         Register.Virtual t2 = Register.Virtual.issueTemp();

@@ -99,10 +99,10 @@ public class Block {
         for (MIPSInstruction inst : mipsInst) {
             List<MIPSOperand> operands = inst.operands;
             for (int i = 0; i < operands.size(); i++) {
-                if (operands.get(i) instanceof Register.Virtual vreg) {
+                if (operands.get(i) instanceof Register.Virtual vreg && !vreg.isSpilled) {
                     operands.set(i, vreg.physicalReg);
                 }
-                if (operands.get(i) instanceof Addr addr && addr.register instanceof Register.Virtual vreg) {
+                if (operands.get(i) instanceof Addr addr && addr.register instanceof Register.Virtual vreg && !vreg.isSpilled) {
                     if (addr.mode == Addr.Mode.BASE_OFFSET) {
                         operands.set(i, new Addr(addr.constant, vreg.physicalReg));
                     } else if (addr.mode == Addr.Mode.REGISTER) {
@@ -118,7 +118,7 @@ public class Block {
                 mipsInst.get(vreg.start.idx).label = null;
                 mipsInst.add(vreg.start.idx, new MIPSInstruction(MIPSOp.LW, label, this, vreg.physicalReg, stack.get(vreg)));
             } else {
-                if (vreg.var != null)
+                if (vreg.var != null && !vreg.isSpilled)
                     mipsInst.add(vreg.start.idx + 1, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
             }
         }

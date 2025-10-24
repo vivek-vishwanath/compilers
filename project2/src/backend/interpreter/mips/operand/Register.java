@@ -29,7 +29,8 @@ public abstract class Register extends MIPSOperand {
     }
 
     public static Register getVar(IROperand var) {
-        return map.getOrDefault(var, null);
+        Register r = map.getOrDefault(var, null);
+        return r;
     }
 
     public static class Virtual extends Register implements Comparable<Register.Virtual> {
