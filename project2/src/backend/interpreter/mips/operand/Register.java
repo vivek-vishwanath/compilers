@@ -39,7 +39,7 @@ public abstract class Register extends MIPSOperand {
         public int start;
         public int end;
         public int readCount;
-        public HashSet<Register.Virtual> concurrentAlives;
+        public HashSet<Register.Virtual> concurrentAlives = new HashSet<>();
         public boolean isSpilled;
         public Register.Physical physicalReg;
 

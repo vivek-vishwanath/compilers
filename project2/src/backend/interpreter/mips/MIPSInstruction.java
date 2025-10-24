@@ -57,6 +57,12 @@ public class MIPSInstruction {
         this.operands = Arrays.asList(operands);
     }
 
+    public MIPSInstruction(MIPSOp op, String label, MIPSOperand... operands) {
+        this.op = op;
+        this.label = label;
+        this.operands = Arrays.asList(operands);
+    }
+
     public boolean isBranch() {
         switch (op) {
             case BEQ:

@@ -121,7 +121,7 @@ public class IRReader {
         for (IRFunction f : intrinsics.values())
             functionMap.put(f.name, f);
         for (IRFunction f : functions)
-            for (IRInstruction inst : f.instructions) {
+            for (IRInstruction inst : f.irInstructions) {
                 IRFunction callee;
                 int argIdx;
                 if (inst.opCode == IRInstruction.OpCode.CALL) {
@@ -151,7 +151,7 @@ public class IRReader {
             }
 
         for (IRFunction f : functions) {
-            for (IRInstruction inst : f.instructions) {
+            for (IRInstruction inst : f.irInstructions) {
                 if (inst.opCode == IRInstruction.OpCode.LABEL) {
                     f.labelMap.put(((IRLabelOperand) inst.operands[0]).getName(), inst);
                 }

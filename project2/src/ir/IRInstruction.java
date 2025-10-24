@@ -100,7 +100,6 @@ public class IRInstruction {
         }
 
         public ArrayList<MIPSInstruction> compile() {
-            ArrayList<MIPSInstruction> list = new ArrayList<>();
             switch (opCode) {
                 case ASSIGN -> {
                     if (operands[1] instanceof IRConstantOperand)

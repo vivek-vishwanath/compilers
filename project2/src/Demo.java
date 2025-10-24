@@ -25,7 +25,7 @@ public class Demo {
         // Print all instructions that stores a constant to an array
         System.out.println("Instructions that stores a constant to an array:");
         for (IRFunction function : program.functions) {
-            for (IRInstruction instruction : function.instructions) {
+            for (IRInstruction instruction : function.irInstructions) {
                 if (instruction.opCode == IRInstruction.OpCode.ARRAY_STORE) {
                     if (instruction.operands[0] instanceof IRConstantOperand) {
                         System.out.print(String.format("Line %d:", instruction.irLineNumber));
@@ -63,7 +63,7 @@ public class Demo {
                 vars.add(v.getName());
             for (IRVariableOperand v : function.variables)
                 vars.add(v.getName());
-            for (IRInstruction instruction : function.instructions)
+            for (IRInstruction instruction : function.irInstructions)
                 for (IROperand operand : instruction.operands)
                     if (operand instanceof IRVariableOperand) {
                         IRVariableOperand variableOperand = (IRVariableOperand) operand;

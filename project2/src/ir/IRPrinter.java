@@ -74,7 +74,7 @@ public class IRPrinter {
         ps.println(String.join(", ", floatList));
 
         // Print instructions
-        for (IRInstruction instruction : function.instructions) {
+        for (IRInstruction instruction : function.irInstructions) {
             if (instruction.opCode != IRInstruction.OpCode.LABEL)
                 ps.print("    ");
             printInstruction(instruction);

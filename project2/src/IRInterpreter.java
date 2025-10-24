@@ -112,12 +112,12 @@ public class IRInterpreter {
             functionMap.put(function.name, function);
 
             // For better efficiency
-            if (!(function.instructions instanceof ArrayList))
-                function.instructions = new ArrayList<>(function.instructions);
+            if (!(function.irInstructions instanceof ArrayList))
+                function.irInstructions = new ArrayList<>(function.irInstructions);
 
             Map<String, Integer> labelMap = new HashMap<>();
-            for (int i = 0; i < function.instructions.size(); i++) {
-                IRInstruction instruction = function.instructions.get(i);
+            for (int i = 0; i < function.irInstructions.size(); i++) {
+                IRInstruction instruction = function.irInstructions.get(i);
                 if (instruction.opCode == IRInstruction.OpCode.LABEL)
                     labelMap.put(((IRLabelOperand) instruction.operands[0]).getName(), i);
             }
@@ -158,10 +158,10 @@ public class IRInterpreter {
 
                 if (caller.returnType != null)
                     throwRuntimeException(
-                            caller.instructions.get(caller.instructions.size() - 1),
+                            caller.irInstructions.get(caller.irInstructions.size() - 1),
                             "Missing return for a function with return value");
 
-                pc.set((ArrayList<IRInstruction>) caller.instructions, sf.returnInstIdx);
+                pc.set((ArrayList<IRInstruction>) caller.irInstructions, sf.returnInstIdx);
                 currentLabelMap = functionLabelMap.get(caller);
             }
         }
@@ -310,7 +310,7 @@ public class IRInterpreter {
                 StackFrame callerSF = stack.peek();
                 IRVariableOperand retVar = (IRVariableOperand) callInst.operands[0];
                 callerSF.setVal(retVar, retVal);
-                pc.set((ArrayList<IRInstruction>) caller.instructions, sf.returnInstIdx);
+                pc.set((ArrayList<IRInstruction>) caller.irInstructions, sf.returnInstIdx);
                 currentLabelMap = functionLabelMap.get(caller);
                 break;
             }
@@ -370,7 +370,7 @@ public class IRInterpreter {
         calleeSF.function = function;
         calleeSF.varMap = buildVarMap(function, arguments);
         stack.push(calleeSF);
-        pc.set((ArrayList<IRInstruction>) function.instructions, 0);
+        pc.set((ArrayList<IRInstruction>) function.irInstructions, 0);
         currentLabelMap = functionLabelMap.get(function);
     }
 
@@ -472,7 +472,7 @@ public class IRInterpreter {
             StackFrame sf = sit.previous();
             if (sf.caller == null)
                 break;
-            System.err.println("\t" + sf.caller.name + ":" + sf.caller.instructions.get(sf.returnInstIdx - 1).irLineNumber);
+            System.err.println("\t" + sf.caller.name + ":" + sf.caller.irInstructions.get(sf.returnInstIdx - 1).irLineNumber);
         }
         throw new IRException();
     }
