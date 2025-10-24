@@ -36,8 +36,6 @@ public class IRInstruction {
 
     public int irLineNumber;
 
-    public IRInstruction branch1, branch2;
-
     public Block block;
 
     public IRInstruction() {}
@@ -105,7 +103,7 @@ public class IRInstruction {
                     if (operands[1] instanceof IRConstantOperand)
                         append(MIPSOp.LI, label, block, Register.Virtual.issueVar(operands[0]), new Imm(operands[1].toString(), Imm.ImmType.INT));
                     else
-                        append(MIPSOp.MOVE, label, block, Register.Virtual.issueVar(operands[0]), Register.Virtual.issueVar(operands[1]));
+                        append(MIPSOp.MOVE, label, block, Register.Virtual.issueVar(operands[0]), Register.getVar(operands[1]));
                 }
                 case ADD, SUB, MULT, DIV, AND, OR -> {
                     if (operands[1] instanceof IRConstantOperand) {
@@ -117,8 +115,8 @@ public class IRInstruction {
                         MIPSOperand sr = Register.Virtual.getVar(operands[1]);
                         append(aluiMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr, new Imm(operands[2].toString(), Imm.ImmType.INT));
                     } else {
-                        MIPSOperand sr1 = Register.Virtual.getVar(operands[1]);
-                        MIPSOperand sr2 = Register.Virtual.getVar(operands[2]);
+                        MIPSOperand sr1 = Register.getVar(operands[1]);
+                        MIPSOperand sr2 = Register.getVar(operands[2]);
                         append(aluMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr1, sr2);
                     }
                 }
@@ -185,8 +183,6 @@ public class IRInstruction {
             }
             return list;
         }
-
-
     }
 
 }

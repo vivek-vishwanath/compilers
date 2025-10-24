@@ -1,12 +1,17 @@
 package backend;
 
 import backend.interpreter.mips.MIPSInstruction;
+import backend.interpreter.mips.MIPSOp;
+import backend.interpreter.mips.operand.Addr;
+import backend.interpreter.mips.operand.Imm;
+import backend.interpreter.mips.operand.MIPSOperand;
 import backend.interpreter.mips.operand.Register;
+import ir.IRFunction;
 import ir.IRInstruction;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 public class Block {
 
@@ -24,47 +29,107 @@ public class Block {
         return "Block_" + id + " [" + (next1 == null ? "" : next1.id) + " , " + (next2 == null ? "" : next2.id) + "]";
     }
 
-    public void intraBlockAlloc() {
+    public void intraBlockAlloc(IRFunction.MStack stack) {
         HashSet<Register.Virtual> vRegSet = new HashSet<>();
+        for (MIPSInstruction mipsInstruction : mipsInst) {
+            Register[] reads = mipsInstruction.getReads();
+            Register write = mipsInstruction.getWrite();
+            for (Register reg : reads) {
+                if (reg instanceof Register.Virtual vReg) {
+                    vReg.start = -1;
+                    vReg.end = -1;
+                    // TODO: Clear everything
+                }
+            }
+            if (write instanceof Register.Virtual vReg) {
+                vReg.start = -1;
+                vReg.end = -1;
+            }
+        }
         for (int i = 0; i < mipsInst.size(); i++) {
-            Register.Virtual[] reads = (Register.Virtual[]) mipsInst.get(i).getReads();
-            for (Register.Virtual vReg : reads) {
+            Register[] reads = mipsInst.get(i).getReads();
+            for (Register reg : reads) {
+                if (!(reg instanceof Register.Virtual vReg)) continue;
+                if (vReg.start == -1) {
+                    vReg.start = i;
+                    vReg.noWrite = true;
+                }
                 vReg.end = i;
                 vReg.readCount++;
                 vRegSet.add(vReg);
             }
-            Register.Virtual write = (Register.Virtual) mipsInst.get(i).getWrite();
-            if (write != null) {
-                write.start = i;
-                write.end = i;
+            Register write = mipsInst.get(i).getWrite();
+            if (write instanceof Register.Virtual vReg) {
+                vReg.start = i + 1;
+                vReg.end = -1;
+                vRegSet.add(vReg);
             }
         }
+        if (vRegSet.isEmpty()) return;
         ArrayList<Register.Virtual> vRegList = new ArrayList<>(vRegSet);
         for (int i = 0; i < vRegList.size(); i++) {
             for (int j = 0; j < i; j++) {
-                if (vRegList.get(i).start < vRegList.get(j).end && vRegList.get(i).end > vRegList.get(j).start) {
-                    vRegList.get(i).concurrentAlives.add(vRegList.get(j));
-                    vRegList.get(j).concurrentAlives.add(vRegList.get(i));
+                Register.Virtual reg1 = vRegList.get(i);
+                Register.Virtual reg2 = vRegList.get(j);
+                if (reg1.start <= reg2.end && reg1.end >= reg2.start) {
+                    reg1.concurrentAlives.add(reg2);
+                    reg2.concurrentAlives.add(reg1);
                 }
             }
         }
         Collections.sort(vRegList);
-        HashSet<Register.Physical> phsicalRegisterList = new HashSet<>();
+        HashSet<Register.Physical> physicalRegs = new HashSet<>();
         for (int i = 0; i < 8; i++) {
-            phsicalRegisterList.add(Register.Physical.get("$t" + i));
+            physicalRegs.add(Register.Physical.get("$t" + i));
         }
         for (int i = 0; i < vRegList.size(); i++) {
+            Register.Virtual reg1 = vRegList.get(i);
             HashSet<Register.Physical> usedList = new HashSet<>();
-            for (int j = 0; j < vRegList.size(); j++) {
-                if (vRegList.get(i).concurrentAlives.contains(vRegList.get(j))) {
-                    if (!vRegList.get(j).isSpilled) usedList.add(vRegList.get(i).physicalReg);
+            for (int j = 0; j < i; j++) {
+                Register.Virtual reg2 = vRegList.get(j);
+                if (reg1.concurrentAlives.contains(reg2)) {
+                    if (!reg2.isSpilled)
+                        usedList.add(reg2.physicalReg);
                 }
             }
-            HashSet<Register.Physical> copy = new HashSet<>(phsicalRegisterList);
+            ArrayList<Register.Physical> copy = new ArrayList<>(physicalRegs);
             copy.removeAll(usedList);
-            if (copy.size() > 0) {
-                vRegList.get(i).physicalReg = copy.iterator().next();
+            if (!copy.isEmpty()) {
+                reg1.physicalReg = copy.getFirst();
+            } else {
+                reg1.isSpilled = true;
             }
         }
+        for (MIPSInstruction inst : mipsInst) {
+            List<MIPSOperand> operands = inst.operands;
+            for (int i = 0; i < operands.size(); i++) {
+                if (operands.get(i) instanceof Register.Virtual vreg) {
+                    operands.set(i, vreg.physicalReg);
+                }
+            }
+        }
+        vRegList.sort(Comparator.comparingInt(v -> -v.start));
+        for (Register.Virtual vreg : vRegList) {
+            if (vreg.noWrite) {
+                String label = mipsInst.get(vreg.start).label;
+                mipsInst.get(vreg.start).label = null;
+                mipsInst.add(vreg.start, new MIPSInstruction(MIPSOp.LW, label, this, vreg.physicalReg, stack.get(vreg)));
+            } else {
+                mipsInst.add(vreg.start, new MIPSInstruction(MIPSOp.SW, null, this, vreg.physicalReg, stack.get(vreg)));
+            }
+        }
+    }
+
+    public void print(FileWriter writer) {
+        mipsInst.forEach(it -> {
+            try {
+                if (it.label != null) {
+                    writer.write(it.label + ":\n");
+                }
+                writer.write("\t\t" + it + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }

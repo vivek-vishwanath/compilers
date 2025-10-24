@@ -2,6 +2,7 @@ package backend.interpreter.mips.operand;
 
 import ir.operand.IROperand;
 import ir.operand.IRVariableOperand;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,11 +37,12 @@ public abstract class Register extends MIPSOperand {
     public static class Virtual extends Register implements Comparable<Register.Virtual> {
 
         public IRVariableOperand var;
-        public int start;
+        public int start = -1;
         public int end;
         public int readCount;
         public HashSet<Register.Virtual> concurrentAlives = new HashSet<>();
         public boolean isSpilled;
+        public boolean noWrite;
         public Register.Physical physicalReg;
 
         public Virtual(int idx) {
@@ -75,6 +77,21 @@ public abstract class Register extends MIPSOperand {
         @Override
         public int compareTo(Register.Virtual that) {
             return that.readCount - this.readCount;
+        }
+
+        public class Sortable implements Comparable<Register.Virtual.Sortable> {
+            int idx;
+            boolean isStart;
+
+            public Sortable(int idx, boolean isStart) {
+                this.idx = idx;
+                this.isStart = isStart;
+            }
+
+            @Override
+            public int compareTo(@NotNull Sortable sortable) {
+                return Integer.compare(sortable.idx, this.idx);
+            }
         }
     }
 

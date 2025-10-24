@@ -25,7 +25,7 @@ public class Generator {
             writer.write(function.name + ":\n");
             function.compileToMIPS();
             function.intraBlockAlloc();
-            function.print(writer);
+            function.print(writer, true);
             writer.write("\n");
             writer.flush();
         }

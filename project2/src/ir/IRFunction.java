@@ -58,26 +58,23 @@ public class IRFunction {
                     leaders.add(inst);
                     break;
                 case GOTO:
-                    inst.branch1 = labelMap.get(operand.toString());
-                    leaders.add(inst.branch1);
+                    leaders.add(labelMap.get(operand.toString()));
                     break;
                 case BREQ:
                 case BRNEQ:
                 case BRLT:
                 case BRGT:
                 case BRGEQ:
-                    inst.branch1 = (i + 1 < irInstructions.size()) ? irInstructions.get(i + 1) : null;
-                    inst.branch2 = labelMap.get(operand.toString());
-                    leaders.add(inst.branch1);
-                    leaders.add(inst.branch2);
+                    if (i + 1 < irInstructions.size())
+                        leaders.add(irInstructions.get(i + 1));
+                    leaders.add(labelMap.get(operand.toString()));
                     break;
                 case CALL:
                 case CALLR:
-                    inst.branch1 = (i + 1 < irInstructions.size()) ? irInstructions.get(i + 1) : null;
-                    leaders.add(inst.branch1);
+                    if (i + 1 < irInstructions.size())
+                        leaders.add(irInstructions.get(i + 1));
                     break;
                 default:
-                    inst.branch1 = (i + 1 < irInstructions.size()) ? irInstructions.get(i + 1) : null;
                     break;
             }
         }
@@ -166,22 +163,20 @@ public class IRFunction {
                 mipsInstructions.add(i, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
                 i++; // move i down by 1
             }
-            if (write != null) {
-                if (write instanceof Register.Virtual vreg) {
-                    Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
-                    if (stackIdx == null) {
-                        stackIdx = stackEdge;
-                        stackLocations.put(vreg.var, stackEdge);
-                        stackEdge -= 4;
-                    }
-                    Register.Physical physical = Register.Physical.get("$t0");
-                    instruction.operands.set(0, physical);
-                    Imm offset = new Imm("" + stackIdx, Imm.ImmType.INT);
-                    Addr address = new Addr(offset, sp);
-                    // add after current instruction
-                    mipsInstructions.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
-                    i++; // point i to sw instruction and i++ in for loop will skip over it
+            if (write instanceof Register.Virtual vreg) {
+                Integer stackIdx = stackLocations.getOrDefault(vreg.var, null);
+                if (stackIdx == null) {
+                    stackIdx = stackEdge;
+                    stackLocations.put(vreg.var, stackEdge);
+                    stackEdge -= 4;
                 }
+                Register.Physical physical = Register.Physical.get("$t0");
+                instruction.operands.set(0, physical);
+                Imm offset = new Imm("" + stackIdx, Imm.ImmType.INT);
+                Addr address = new Addr(offset, sp);
+                // add after current instruction
+                mipsInstructions.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
+                i++; // point i to sw instruction and i++ in for loop will skip over it
             }
         }
         mipsInstructions.add(new MIPSInstruction(MIPSOp.ADDI, name + "_teardown", sp, fp, new Imm("8", Imm.ImmType.INT)));
@@ -191,21 +186,69 @@ public class IRFunction {
     }
 
     public void intraBlockAlloc() {
+        MStack stack = new MStack();
+        stack.buildup();
         for (Block block : blocks) {
-            block.intraBlockAlloc();
+            block.intraBlockAlloc(stack);
         }
+        stack.teardown();
     }
 
-    public void print(FileWriter writer) {
-        mipsInstructions.forEach(it -> {
-            try {
-                if (it.label != null) {
-                    writer.write(it.label + ":\n");
+    public void print(FileWriter writer, boolean byBlock) {
+        if (byBlock)
+            blocks.forEach(it -> it.print(writer));
+        else
+            mipsInstructions.forEach(it -> {
+                try {
+                    if (it.label != null) {
+                        writer.write(it.label + ":\n");
+                    }
+                    writer.write("\t\t" + it + "\n");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-                writer.write("\t\t" + it + "\n");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            });
+    }
+
+
+    public class MStack {
+
+        HashMap<IRVariableOperand, Integer> locations = new HashMap<>();
+        int stackSize = 4 * Register.numRegs();
+        int edge = stackSize - 4;
+
+        Register fp = Register.Physical.get("$fp");
+        Register sp = Register.Physical.get("$sp");
+        Register ra = Register.Physical.get("$ra");
+
+        public void buildup() {
+            Block block = new Block();
+            Imm stackOff = new Imm("" + -stackSize, Imm.ImmType.INT);
+            block.mipsInst.add(0, new MIPSInstruction(MIPSOp.SW, null, fp, new Addr(new Imm("-8", Imm.ImmType.INT), sp)));
+            block.mipsInst.add(1, new MIPSInstruction(MIPSOp.ADDI, null, fp, sp, new Imm("-8", Imm.ImmType.INT)));
+            block.mipsInst.add(2, new MIPSInstruction(MIPSOp.SW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
+            block.mipsInst.add(3, new MIPSInstruction(MIPSOp.ADDI, null, sp, fp, stackOff));
+            blocks.addFirst(block);
+        }
+
+        public void teardown() {
+            Block block = new Block();
+            block.mipsInst.add(new MIPSInstruction(MIPSOp.ADDI, name + "_teardown", sp, fp, new Imm("8", Imm.ImmType.INT)));
+            block.mipsInst.add(new MIPSInstruction(MIPSOp.LW, null, ra, new Addr(new Imm("4", Imm.ImmType.INT), fp)));
+            block.mipsInst.add(new MIPSInstruction(MIPSOp.LW, null, fp, new Addr(new Imm("0", Imm.ImmType.INT), fp)));
+            block.mipsInst.add(new MIPSInstruction(MIPSOp.JR, null, Register.Physical.get("$ra")));
+            blocks.add(block);
+        }
+
+        public Addr get(Register.Virtual vreg) {
+            Integer stackIdx = locations.getOrDefault(vreg.var, null);
+            if (stackIdx == null) {
+                stackIdx = edge;
+                locations.put(vreg.var, edge);
+                edge -= 4;
             }
-        });
+            Imm offset = new Imm("" + stackIdx, Imm.ImmType.INT);
+            return new Addr(offset, Register.Physical.get("$sp"));
+        }
     }
 }
