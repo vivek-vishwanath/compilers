@@ -2,7 +2,6 @@ package backend.interpreter.mips.operand;
 
 import ir.operand.IROperand;
 import ir.operand.IRVariableOperand;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,13 +38,24 @@ public abstract class Register extends MIPSOperand {
         public Snapshot start;
         public Snapshot end;
         public int readCount;
-        public HashSet<Register.Virtual> concurrentAlives = new HashSet<>();
+        public HashSet<Register.Virtual> concurrentAlives;
         public boolean isSpilled;
         public boolean noWrite;
         public Register.Physical physicalReg;
 
+        public void reset() {
+            start = null;
+            end = null;
+            readCount = 0;
+            concurrentAlives = new HashSet<>();
+            isSpilled = false;
+            noWrite = false;
+            physicalReg = null;
+        }
+
         public Virtual(int idx) {
             super(idx);
+            reset();
         }
         private static ArrayList<Virtual> vregs = new ArrayList<>();
         private static int globalIdx = 0;
