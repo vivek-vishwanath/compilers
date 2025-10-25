@@ -1,6 +1,8 @@
 #start_function
 void test(int a, int[100] b, int[100] c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m, int n, int o, int p, int q, int r, int s, int t, int u, int v, int w, int x, int y, int z):
-    assign a, 1
+int-list: ab
+float-list:
+    assign ab, 1
 #end_function
 
 #start_function
