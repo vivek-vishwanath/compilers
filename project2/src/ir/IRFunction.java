@@ -113,6 +113,8 @@ public class IRFunction {
             if (op.type instanceof IRArrayType && !parameters.contains(op)) {
                 block = new Block();
                 block.mipsInst.add(new MIPSInstruction(MIPSOp.LI, null, block, Register.Physical.get("$a0"), new Imm("" + ((IRArrayType) op.type).getSize(), Imm.ImmType.INT)));
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.ADD, null, block, Register.Physical.get("$a0"), Register.Physical.get("$a0"), Register.Physical.get("$a0")));
+                block.mipsInst.add(new MIPSInstruction(MIPSOp.ADD, null, block, Register.Physical.get("$a0"), Register.Physical.get("$a0"), Register.Physical.get("$a0")));
                 block.mipsInst.add(new MIPSInstruction(MIPSOp.LI, null, block, Register.Physical.get("$v0"), new Imm("9", Imm.ImmType.INT)));
                 block.mipsInst.add(new MIPSInstruction(MIPSOp.SYSCALL, null, block));
                 block.mipsInst.add(new MIPSInstruction(MIPSOp.MOVE, null, block, Register.Virtual.issueVar(op), Register.Physical.get("$v0")));
