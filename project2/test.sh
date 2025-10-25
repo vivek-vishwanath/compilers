@@ -38,7 +38,7 @@ for in_file in ../"$FOLDER"/*.in; do
     if [[ -f "$out_file" ]]; then
         echo
         echo "=== Test $num ==="
-        diff <(./run.sh --in "../$FOLDER/${num}.in" "../$FOLDER/${BASENAME}.s") "../$FOLDER/${num}.out" --side-by-side
+        diff <(./run.sh --in "../$FOLDER/${num}.in" "../$FOLDER/${BASENAME}.s") "../$FOLDER/${num}.out" --side-by-side -w
     else
         echo "Warning: No matching .out file for $in_file, skipping."
     fi

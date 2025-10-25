@@ -100,7 +100,7 @@ public class IRInstruction {
 
         public void compileCall(int start) {
             for (int i = start + 4; i < operands.length; i++) {
-                Addr addr = new Addr(new Imm("" + (3 - i) * 4, Imm.ImmType.INT), Register.Physical.get("$sp"));
+                Addr addr = new Addr(new Imm("" + (i - 10) * 4, Imm.ImmType.INT), Register.Physical.get("$sp"));
                 if (operands[i] instanceof IRConstantOperand) {
                     Register.Physical a0 = Register.Physical.get("$a0");
                     append(MIPSOp.LI, null, block, a0, new Imm(operands[i].toString(), Imm.ImmType.INT));
@@ -142,24 +142,39 @@ public class IRInstruction {
                         append(MIPSOp.MOVE, label, block, Register.Virtual.issueVar(operands[0]), Register.getVar(operands[1]));
                 }
                 case ADD, SUB, MULT, DIV, AND, OR -> {
-                    if (operands[1] instanceof IRConstantOperand) {
-                        IROperand temp = operands[1];
-                        operands[1] = operands[2];
-                        operands[2] = temp;
-                    }
-                    if (operands[2] instanceof IRConstantOperand) {
-                        MIPSOperand sr = Register.Virtual.getVar(operands[1]);
-                        if (aluiMap.containsKey(opCode))
-                            append(aluiMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr, new Imm(operands[2].toString(), Imm.ImmType.INT));
-                        else {
-                            Register.Virtual temp = Register.Virtual.issueTemp();
-                            append(MIPSOp.LI, label, block, temp, new Imm(operands[2].toString(), Imm.ImmType.INT));
-                            append(aluMap.get(opCode), null, block, Register.Virtual.issueVar(operands[0]), sr, temp);
+                    if (operands[1] instanceof IRConstantOperand v1 && operands[2] instanceof IRConstantOperand v2) {
+                        int n1 = Integer.parseInt(v1.toString());
+                        int n2 = Integer.parseInt(v2.toString());
+                        int res = 0;
+                        switch (opCode) {
+                            case ADD -> res = n1 + n2;
+                            case SUB -> res = n1 - n2;
+                            case MULT -> res = n1 * n2;
+                            case DIV -> res = n1 / n2;
+                            case AND -> res = n1 & n2;
+                            case OR -> res = n1 | n2;
                         }
+                        append(MIPSOp.LI, label, block, Register.Virtual.issueVar(operands[0]), new Imm("" + res, Imm.ImmType.INT));
                     } else {
-                        MIPSOperand sr1 = Register.getVar(operands[1]);
-                        MIPSOperand sr2 = Register.getVar(operands[2]);
-                        append(aluMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr1, sr2);
+                        if (operands[1] instanceof IRConstantOperand) {
+                            IROperand temp = operands[1];
+                            operands[1] = operands[2];
+                            operands[2] = temp;
+                        }
+                        if (operands[2] instanceof IRConstantOperand) {
+                            MIPSOperand sr = Register.Virtual.getVar(operands[1]);
+                            if (aluiMap.containsKey(opCode))
+                                append(aluiMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                            else {
+                                Register.Virtual temp = Register.Virtual.issueTemp();
+                                append(MIPSOp.LI, label, block, temp, new Imm(operands[2].toString(), Imm.ImmType.INT));
+                                append(aluMap.get(opCode), null, block, Register.Virtual.issueVar(operands[0]), sr, temp);
+                            }
+                        } else {
+                            MIPSOperand sr1 = Register.getVar(operands[1]);
+                            MIPSOperand sr2 = Register.getVar(operands[2]);
+                            append(aluMap.get(opCode), label, block, Register.Virtual.issueVar(operands[0]), sr1, sr2);
+                        }
                     }
                 }
                 case BREQ, BRNEQ, BRLT, BRGT, BRGEQ -> {
@@ -210,6 +225,9 @@ public class IRInstruction {
                     if (operands[1] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[1]).getName().equals("geti")) {
                         append(MIPSOp.LI, label, block, v0, new Imm("5", Imm.ImmType.INT));
                         append(MIPSOp.SYSCALL, null, block);
+                    } else if (operands[1] instanceof IRFunctionOperand && ((IRFunctionOperand) operands[1]).getName().equals("getc")) {
+                        append(MIPSOp.LI, label, block, v0, new Imm("12", Imm.ImmType.INT));
+                        append(MIPSOp.SYSCALL, null, block);
                     } else {
                         compileCall(2);
                     }
@@ -250,7 +268,13 @@ public class IRInstruction {
                         append(MIPSOp.LI, label, block, t1, new Imm("4", Imm.ImmType.INT));
                         append(MIPSOp.MUL, null, block, t2, Register.Virtual.getVar(operands[2]), t1);
                         append(MIPSOp.ADD, null, block, t3, base, t2);
-                        append(MIPSOp.SW, null, block, Register.Virtual.getVar(operands[0]), new Addr(t3));
+                        if (operands[0] instanceof IRConstantOperand) {
+                            Register.Virtual temp = Register.Virtual.issueTemp();
+                            append(MIPSOp.LI, null, block, temp, new Imm(operands[0].toString(), Imm.ImmType.INT));
+                            append(MIPSOp.SW, null, block, temp, new Addr(t3));
+                        } else {
+                            append(MIPSOp.SW, null, block, Register.Virtual.getVar(operands[0]), new Addr(t3));
+                        }
                     }
                 }
                 default -> {}

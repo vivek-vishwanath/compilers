@@ -142,7 +142,6 @@ public class IRFunction {
             }
             IRInstruction.Selector selector = instruction.new Selector(label, name);
             selector.compile();
-//            selector.list.forEach(it -> System.out.println("\t\t" + it));
             mipsInstructions.addAll(selector.list);
             label = null;
         }
