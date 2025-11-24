@@ -43,7 +43,7 @@ main_start_loop1:
 		lw $t0, 0($sp)
 		lw $t1, 4($sp)
 		bge $t0, $t1, main_exit_loop1
-		li $v0, 12
+		li $v0, 5
 		syscall
 		move $t0, $v0
 		sw $t0, -4($sp)
@@ -86,7 +86,7 @@ main_start_loop2:
 		lw $t0, 4($sp)
 		lw $t0, ($t0)
 		sw $t0, -4($sp)
-		li $v0, 11
+		li $v0, 1
 		lw $t0, -4($sp)
 		move $a0, $t0
 		syscall
@@ -98,7 +98,12 @@ main_start_loop2:
 		sw $t0, 0($sp)
 		j main_start_loop2
 main_exit_loop2:
-		add $zero, $zero, $zero
+		li $t0, 12
+		sw $t0, 0($sp)
+		lw $t0, 0($sp)
+		lw $t1, 0($sp)
+		add $t0, $t0, $t1
+		sw $t0, 0($sp)
 main_teardown:
 		addi $sp, $fp, 8
 		lw $ra, 4($fp)

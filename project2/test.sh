@@ -13,8 +13,8 @@ if [[ "$IR_FILE_COUNT" -ne 1 ]]; then
 fi
 
 IR_FILE=$(find "$FOLDER" -maxdepth 1 -type f -name "*.ir" | head -n 1)
-BASE_NAME="${IR_FILE%.ir}"
-S_FILE="${FOLDER%/}/${BASENAME}.s"
+BASE_NAME="${IR_FILE%.ir}"   # removes suffix
+S_FILE="${BASE_NAME}.s"      # just append .s
 
 # --- Step 1: Run the .ir/.s pair once ---
 if [[ ! -f "$IR_FILE" ]]; then
@@ -38,7 +38,7 @@ for in_file in ../"$FOLDER"/*.in; do
     if [[ -f "$out_file" ]]; then
         echo
         echo "=== Test $num ==="
-        diff <(./run.sh --in "../$FOLDER/${num}.in" "../$FOLDER/${BASENAME}.s") "../$FOLDER/${num}.out" --side-by-side -w
+        diff <(./run.sh --in "../$FOLDER/${num}.in" "../${BASE_NAME}.s") "../$FOLDER/${num}.out" -w
     else
         echo "Warning: No matching .out file for $in_file, skipping."
     fi

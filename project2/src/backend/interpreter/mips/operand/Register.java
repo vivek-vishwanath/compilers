@@ -36,13 +36,18 @@ public abstract class Register extends MIPSOperand {
     public static class Virtual extends Register implements Comparable<Register.Virtual> {
 
         public IRVariableOperand var;
-        public Snapshot start;
-        public Snapshot end;
         public int readCount;
         public HashSet<Register.Virtual> concurrentAlives;
+        public HashSet<Register.Virtual> backupAlives;
         public boolean isSpilled;
         public boolean noWrite;
         public Register.Physical physicalReg;
+
+        // Used for Chaitin-Briggs Allocation
+        public ArrayList<Range> ranges = new ArrayList<>();
+        // Used for Intra-Block Allocation
+        public Snapshot start;
+        public Snapshot end;
 
         public void reset() {
             start = null;
@@ -52,6 +57,7 @@ public abstract class Register extends MIPSOperand {
             isSpilled = false;
             noWrite = false;
             physicalReg = null;
+            ranges.clear();
         }
 
         public Virtual(int idx) {
@@ -86,7 +92,22 @@ public abstract class Register extends MIPSOperand {
 
         @Override
         public int compareTo(Register.Virtual that) {
-            return that.readCount - this.readCount;
+            return this.concurrentAlives.size() - that.concurrentAlives.size();
+        }
+
+        public static class Range {
+            public Snapshot start;
+            public Snapshot end;
+
+            public Range(Snapshot start, Snapshot end) {
+                this.start = start;
+                this.end = end;
+            }
+
+            @Override
+            public String toString() {
+                return "[" + start + ", " + end + "]";
+            }
         }
 
         public static class Snapshot implements Comparable<Snapshot> {
@@ -101,6 +122,11 @@ public abstract class Register extends MIPSOperand {
             @Override
             public int compareTo(Snapshot other) {
                 return Integer.compare(this.idx * 2 + (this.after ? 1 : 0), other.idx * 2 + (other.after ? 1 : 0));
+            }
+
+            @Override
+            public String toString() {
+                return idx + (after ? "+" : "-");
             }
         }
     }

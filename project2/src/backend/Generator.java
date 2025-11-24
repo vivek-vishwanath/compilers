@@ -24,16 +24,27 @@ public class Generator {
         writer.flush();
 
         for (IRFunction function : program.functions) {
-            boolean naive = args.length > 2 && Objects.equals(args[2], "--naive");
+            Mode mode = null;
+            if (args.length == 2) mode = Mode.NAIVE;
+            else if ("--naive".equals(args[2])) mode = Mode.NAIVE;
+            else if ("--greedy".equals(args[2])) mode = Mode.GREEDY;
+            else if ("--chaitin".equals(args[2])) mode = Mode.CHAITIN_BRIGGS;
+            else mode = Mode.NAIVE;
             writer.write(function.name + ":\n");
+            function.buildBlocks();
+            function.buildCFG();
             function.compileToMIPS();
-            function.allocate(naive);
-            function.print(writer, !naive);
+            function.allocate(mode);
+            function.print(writer, mode);
             writer.write("\n");
             writer.flush();
             Register.clear();
         }
         writer.close();
 
+    }
+
+    public enum Mode {
+        NAIVE, GREEDY, CHAITIN_BRIGGS
     }
 }

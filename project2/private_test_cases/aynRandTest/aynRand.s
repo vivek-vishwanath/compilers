@@ -13,22 +13,22 @@ main:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -8
-		li $t4, 0
-		sw $t4, 0($sp)
-		li $t4, 100
-		sw $t4, 4($sp)
+		li $t0, 0
+		sw $t0, 4($sp)
+		li $t0, 100
+		sw $t0, 0($sp)
 main_start_loop:
-		lw $t6, 4($sp)
-		lw $t4, 0($sp)
-		bge $t4, $t6, main_exit_loop
-		lw $t4, 0($sp)
-		addi $t4, $t4, 1
-		sw $t4, 0($sp)
+		lw $t0, 4($sp)
+		lw $t1, 0($sp)
+		bge $t0, $t1, main_exit_loop
+		lw $t0, 4($sp)
+		addi $t0, $t0, 1
+		sw $t0, 4($sp)
 		j main_start_loop
 main_exit_loop:
 		li $v0, 1
-		lw $t4, 0($sp)
-		move $a0, $t4
+		lw $t0, 4($sp)
+		move $a0, $t0
 		syscall
 main_teardown:
 		addi $sp, $fp, 8

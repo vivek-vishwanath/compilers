@@ -22,54 +22,21 @@ main:
 		sw $t0, 8($sp)
 		li $t0, 0
 		sw $t0, 4($sp)
-		li $t0, -1
+		li $t0, 4240
 		sw $t0, 0($sp)
 		lw $t0, 0($sp)
 		lw $t1, 8($sp)
 		sw $t0, 0($t1)
-main_init_loop:
-		li $t0, 2
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		bge $t0, $t1, main_after_first_loop
-		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
-		li $t0, 4240
+		li $t0, 4290
 		sw $t0, 0($sp)
 		lw $t0, 0($sp)
-		lw $t1, 0($sp)
-		sw $t0, ($t1)
-		lw $t0, 4($sp)
-		addi $t0, $t0, 1
-		sw $t0, 4($sp)
-		j main_init_loop
-main_after_first_loop:
-		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
-		li $t0, 1331
+		lw $t1, 8($sp)
+		sw $t0, 4($t1)
+		li $t0, 3220
 		sw $t0, 0($sp)
 		lw $t0, 0($sp)
-		lw $t1, 0($sp)
-		sw $t0, ($t1)
-		li $t0, 0
-		sw $t0, 4($sp)
+		lw $t1, 8($sp)
+		sw $t0, 8($t1)
 main_print_loop:
 		li $t0, 3
 		sw $t0, 0($sp)

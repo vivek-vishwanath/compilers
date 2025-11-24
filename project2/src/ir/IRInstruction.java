@@ -13,6 +13,8 @@ import ir.operand.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static ir.IRInstruction.OpCode.CALL;
+
 public class IRInstruction {
 
     public enum OpCode {
@@ -39,6 +41,8 @@ public class IRInstruction {
 
     public Block block;
 
+    public IRInstruction branch1, branch2;
+
     public IRInstruction() {}
 
     public IRInstruction(OpCode opCode, IROperand[] operands, int irLineNumber) {
@@ -47,11 +51,26 @@ public class IRInstruction {
         this.irLineNumber = irLineNumber;
     }
 
-    public String getDestination() {
+    public IROperand getDestination() {
         return switch (opCode) {
-            case ASSIGN, ADD, SUB, MULT, DIV, AND, OR, CALLR, ARRAY_LOAD -> operands[0].toString();
-            case ARRAY_STORE -> operands[1].toString();
+            case ASSIGN, ADD, SUB, MULT, DIV, AND, OR, CALLR, ARRAY_LOAD -> operands[0];
+            case ARRAY_STORE -> operands[1];
             default -> null;
+        };
+    }
+
+    public IROperand[] getSources() {
+        return switch (opCode) {
+            case ASSIGN, ARRAY_LOAD -> new IROperand[]{operands[1]};
+            case ADD, SUB, MULT, DIV, AND, OR, BREQ, BRNEQ, BRLT, BRGT, BRGEQ -> new IROperand[]{operands[1], operands[2]};
+            case RETURN, ARRAY_STORE -> new IROperand[]{operands[0]};
+            case CALL, CALLR -> {
+                int n = opCode == CALL ? 1 : 2;
+                IROperand[] operand = new IROperand[operands.length - n];
+                System.arraycopy(operands, n, operand, 0, operand.length);
+                yield operand;
+            }
+            default -> new IROperand[0];
         };
     }
 
