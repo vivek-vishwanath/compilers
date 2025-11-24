@@ -1,0 +1,17 @@
+#start_function
+int live(int n):
+int-list: x, y, z, t0, t1
+float-list:
+    assign, z, 10
+    assign, x, 0
+    assign, y, 1
+loop:
+    brlt, ret, x, n
+    mult, t0, x, 2
+    add, z, t0, y
+    add, x, x, 1
+    add, y, x, z
+    goto, loop
+ret:
+    return, y
+#end_function
