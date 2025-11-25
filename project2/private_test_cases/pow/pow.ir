@@ -1,0 +1,27 @@
+#start_function
+void main():
+int-list: base, exp, prod
+float-list:
+    callr, base, geti
+    callr, exp, geti
+    callr, prod, pow, base, exp
+    call, puti, prod
+#end_function
+
+#start_function
+int pow(int base, int exp):
+int-list: prod
+float-list:
+    assign prod, 1
+    breq, return1, exp, 0
+    breq, return0, base, 0
+loop:
+    mult prod, prod, base
+    sub exp, exp, 1
+    brgt, loop, exp, 0
+    return prod
+return0:
+    return 0
+return1:
+    return 1
+#end_function

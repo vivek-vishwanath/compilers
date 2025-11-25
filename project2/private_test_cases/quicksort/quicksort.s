@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+	li $t0, 0
+	li $t1, 0
+	li $t2, 0
+	li $t3, 0
+	li $t4, 0
+	li $t5, 0
+	li $t6, 0
+	li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -20,24 +28,31 @@ main:
 		syscall
 		move $t0, $v0
 		sw $t0, 12($sp)
+		sw $t0, 12($sp)
 		li $t0, 0
+		sw $t0, 8($sp)
 		sw $t0, 8($sp)
 		li $v0, 5
 		syscall
 		move $t0, $v0
 		sw $t0, 4($sp)
+		sw $t0, 4($sp)
 		li $t0, 100
+		sw $t0, 0($sp)
 		sw $t0, 0($sp)
 		lw $t0, 4($sp)
 		lw $t1, 0($sp)
 		bgt $t0, $t1, main_return
 		li $t0, 1
 		sw $t0, 0($sp)
+		sw $t0, 0($sp)
 		lw $t0, 4($sp)
 		lw $t1, 0($sp)
 		sub $t0, $t0, $t1
 		sw $t0, 4($sp)
+		sw $t0, 4($sp)
 		li $t0, 0
+		sw $t0, -4($sp)
 		sw $t0, -4($sp)
 main_loop0:
 		lw $t0, -4($sp)
@@ -47,21 +62,26 @@ main_loop0:
 		syscall
 		move $t0, $v0
 		sw $t0, 8($sp)
+		sw $t0, 8($sp)
 		li $t0, 4
+		sw $t0, 0($sp)
 		sw $t0, 0($sp)
 		lw $t0, -4($sp)
 		lw $t1, 0($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 0($sp)
+		sw $t0, 0($sp)
 		lw $t0, 12($sp)
 		lw $t1, 0($sp)
 		add $t0, $t0, $t1
+		sw $t0, 0($sp)
 		sw $t0, 0($sp)
 		lw $t0, 8($sp)
 		lw $t1, 0($sp)
 		sw $t0, ($t1)
 		lw $t0, -4($sp)
 		addi $t0, $t0, 1
+		sw $t0, -4($sp)
 		sw $t0, -4($sp)
 		j main_loop0
 main_exit0:
@@ -73,22 +93,27 @@ main_exit0:
 		jal quicksort
 		li $t0, 0
 		sw $t0, -4($sp)
+		sw $t0, -4($sp)
 main_loop1:
 		lw $t0, -4($sp)
 		lw $t1, 4($sp)
 		bgt $t0, $t1, main_exit1
 		li $t0, 4
 		sw $t0, 0($sp)
+		sw $t0, 0($sp)
 		lw $t0, -4($sp)
 		lw $t1, 0($sp)
 		mul $t0, $t0, $t1
+		sw $t0, 0($sp)
 		sw $t0, 0($sp)
 		lw $t0, 12($sp)
 		lw $t1, 0($sp)
 		add $t0, $t0, $t1
 		sw $t0, 0($sp)
+		sw $t0, 0($sp)
 		lw $t0, 0($sp)
 		lw $t0, ($t0)
+		sw $t0, 8($sp)
 		sw $t0, 8($sp)
 		li $v0, 1
 		lw $t0, 8($sp)
@@ -99,6 +124,7 @@ main_loop1:
 		syscall
 		lw $t0, -4($sp)
 		addi $t0, $t0, 1
+		sw $t0, -4($sp)
 		sw $t0, -4($sp)
 		j main_loop1
 main_exit1:
@@ -118,13 +144,18 @@ quicksort:
 		addi $sp, $fp, -44
 		move $t0, $a0
 		sw $t0, 40($sp)
+		sw $t0, 40($sp)
 		move $t0, $a1
+		sw $t0, 36($sp)
 		sw $t0, 36($sp)
 		move $t0, $a2
 		sw $t0, 32($sp)
+		sw $t0, 32($sp)
 		li $t0, 0
 		sw $t0, 28($sp)
+		sw $t0, 28($sp)
 		li $t0, 0
+		sw $t0, 24($sp)
 		sw $t0, 24($sp)
 		lw $t0, 36($sp)
 		lw $t1, 32($sp)
@@ -133,33 +164,43 @@ quicksort:
 		lw $t1, 32($sp)
 		add $t0, $t0, $t1
 		sw $t0, 20($sp)
+		sw $t0, 20($sp)
 		li $t0, 2
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 20($sp)
 		lw $t1, 16($sp)
 		div $t0, $t0, $t1
 		sw $t0, 20($sp)
+		sw $t0, 20($sp)
 		li $t0, 4
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 20($sp)
 		lw $t1, 16($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 40($sp)
 		lw $t1, 16($sp)
 		add $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 16($sp)
 		lw $t0, ($t0)
 		sw $t0, 12($sp)
+		sw $t0, 12($sp)
 		li $t0, 1
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 36($sp)
 		lw $t1, 16($sp)
 		sub $t0, $t0, $t1
 		sw $t0, 28($sp)
+		sw $t0, 28($sp)
 		lw $t0, 32($sp)
 		addi $t0, $t0, 1
+		sw $t0, 24($sp)
 		sw $t0, 24($sp)
 quicksort_loop0:
 		add $zero, $zero, $zero
@@ -167,21 +208,27 @@ quicksort_loop1:
 		lw $t0, 28($sp)
 		addi $t0, $t0, 1
 		sw $t0, 28($sp)
+		sw $t0, 28($sp)
 		li $t0, 4
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 28($sp)
 		lw $t1, 16($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 40($sp)
 		lw $t1, 16($sp)
 		add $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 16($sp)
 		lw $t0, ($t0)
 		sw $t0, 8($sp)
+		sw $t0, 8($sp)
 		lw $t0, 8($sp)
 		move $t0, $t0
+		sw $t0, 4($sp)
 		sw $t0, 4($sp)
 		lw $t0, 4($sp)
 		lw $t1, 12($sp)
@@ -189,25 +236,32 @@ quicksort_loop1:
 quicksort_loop2:
 		li $t0, 1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 24($sp)
 		lw $t1, 16($sp)
 		sub $t0, $t0, $t1
 		sw $t0, 24($sp)
+		sw $t0, 24($sp)
 		li $t0, 4
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 24($sp)
 		lw $t1, 16($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 40($sp)
 		lw $t1, 16($sp)
 		add $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 16($sp)
 		lw $t0, ($t0)
 		sw $t0, 8($sp)
+		sw $t0, 8($sp)
 		lw $t0, 8($sp)
 		move $t0, $t0
+		sw $t0, 0($sp)
 		sw $t0, 0($sp)
 		lw $t0, 0($sp)
 		lw $t1, 12($sp)
@@ -217,26 +271,32 @@ quicksort_loop2:
 		bge $t0, $t1, quicksort_exit0
 		li $t0, 4
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 24($sp)
 		lw $t1, 16($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 40($sp)
 		lw $t1, 16($sp)
 		add $t0, $t0, $t1
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 4($sp)
 		lw $t1, 16($sp)
 		sw $t0, ($t1)
 		li $t0, 4
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 28($sp)
 		lw $t1, 16($sp)
 		mul $t0, $t0, $t1
 		sw $t0, 16($sp)
+		sw $t0, 16($sp)
 		lw $t0, 40($sp)
 		lw $t1, 16($sp)
 		add $t0, $t0, $t1
+		sw $t0, 16($sp)
 		sw $t0, 16($sp)
 		lw $t0, 0($sp)
 		lw $t1, 16($sp)
@@ -245,6 +305,7 @@ quicksort_loop2:
 quicksort_exit0:
 		lw $t0, 24($sp)
 		addi $t0, $t0, 1
+		sw $t0, -4($sp)
 		sw $t0, -4($sp)
 		lw $t0, 40($sp)
 		move $a0, $t0
@@ -255,6 +316,7 @@ quicksort_exit0:
 		jal quicksort
 		lw $t0, 24($sp)
 		addi $t0, $t0, 1
+		sw $t0, 24($sp)
 		sw $t0, 24($sp)
 		lw $t0, 40($sp)
 		move $a0, $t0

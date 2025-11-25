@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -13,21 +21,11 @@ divisible:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -12
-		move $t0, $a0
-		sw $t0, 8($sp)
+		move $t1, $a0
 		move $t0, $a1
-		sw $t0, 4($sp)
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		div $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		bne $t0, $t1, divisible_label0
+		div $t2, $t1, $t0
+		mul $t2, $t2, $t0
+		bne $t1, $t2, divisible_label0
 		li $v0, 1
 		j divisible_teardown
 divisible_label0:
@@ -44,157 +42,121 @@ main:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -56
-		li $t0, 0
-		sw $t0, 52($sp)
-		li $t0, 2
-		sw $t0, 48($sp)
-		li $t0, 3
-		sw $t0, 44($sp)
+		li $t1, 0
+		li $t4, 2
+		li $t1, 3
 		li $t0, 6
-		sw $t0, 40($sp)
-		li $t0, 0
-		sw $t0, 36($sp)
+		li $t2, 0
 		li $v0, 5
 		syscall
-		move $t0, $v0
-		sw $t0, 32($sp)
-		li $t0, 1
-		sw $t0, 28($sp)
-		lw $t0, 32($sp)
-		lw $t1, 28($sp)
-		bgt $t0, $t1, main_label0
-		li $t0, 0
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
+		move $t5, $v0
+		li $t3, 1
+		bgt $t5, $t3, main_label0
+		li $t4, 0
+		move $t3, $t4
 		j main_print
 main_label0:
-		li $t0, 3
-		sw $t0, 28($sp)
-		lw $t0, 32($sp)
-		lw $t1, 28($sp)
-		bgt $t0, $t1, main_label1
-		li $t0, 1
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
+		li $t3, 3
+		bgt $t5, $t3, main_label1
+		li $t4, 1
+		move $t3, $t4
 		j main_print
 main_label1:
-		lw $t0, 32($sp)
-		move $a0, $t0
-		lw $t0, 48($sp)
-		move $a1, $t0
+		move $a0, $t5
+		move $a1, $t4
+		addi $sp, $sp, -20
+		sw $t2, 16($sp)
+		sw $t1, 12($sp)
+		sw $t6, 8($sp)
+		sw $t5, 4($sp)
+		sw $t0, 0($sp)
 		jal divisible
-		move $t0, $v0
-		sw $t0, 16($sp)
-		lw $t0, 36($sp)
-		move $t0, $t0
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
-		li $t0, 1
-		sw $t0, 28($sp)
-		lw $t0, 16($sp)
-		lw $t1, 28($sp)
-		beq $t0, $t1, main_label2
-		lw $t0, 32($sp)
-		move $a0, $t0
-		lw $t0, 44($sp)
-		move $a1, $t0
+		lw $t2, 16($sp)
+		lw $t1, 12($sp)
+		lw $t6, 8($sp)
+		lw $t5, 4($sp)
+		lw $t0, 0($sp)
+		addi $sp, $sp, 20
+		move $t7, $v0
+		move $t4, $t2
+		move $t3, $t4
+		li $t4, 1
+		beq $t7, $t4, main_label2
+		move $a0, $t5
+		move $a1, $t1
+		addi $sp, $sp, -16
+		sw $t2, 12($sp)
+		sw $t6, 8($sp)
+		sw $t5, 4($sp)
+		sw $t0, 0($sp)
 		jal divisible
-		move $t0, $v0
-		sw $t0, 16($sp)
-		lw $t0, 36($sp)
-		move $t0, $t0
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
-		li $t0, 1
-		sw $t0, 28($sp)
-		lw $t0, 16($sp)
-		lw $t1, 28($sp)
-		beq $t0, $t1, main_label2
+		lw $t2, 12($sp)
+		lw $t6, 8($sp)
+		lw $t5, 4($sp)
+		lw $t0, 0($sp)
+		addi $sp, $sp, 16
+		move $t7, $v0
+		move $t4, $t2
+		move $t3, $t4
+		li $t1, 1
+		beq $t7, $t1, main_label2
 		j main_label3
 main_label2:
 		j main_print
 main_label3:
-		li $t0, 5
-		sw $t0, 52($sp)
+		li $t1, 5
 main_loop:
-		lw $t0, 52($sp)
-		lw $t1, 52($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 12($sp)
-		lw $t0, 12($sp)
-		lw $t1, 32($sp)
-		bgt $t0, $t1, main_exit
-		lw $t0, 32($sp)
-		move $a0, $t0
-		lw $t0, 52($sp)
-		move $a1, $t0
+		mul $t3, $t1, $t1
+		bgt $t3, $t5, main_exit
+		move $a0, $t5
+		move $a1, $t1
+		addi $sp, $sp, -12
+		sw $t2, 8($sp)
+		sw $t1, 4($sp)
+		sw $t5, 0($sp)
 		jal divisible
-		move $t0, $v0
-		sw $t0, 16($sp)
-		lw $t0, 36($sp)
-		move $t0, $t0
-		sw $t0, 24($sp)
+		lw $t2, 8($sp)
+		lw $t1, 4($sp)
+		lw $t5, 0($sp)
+		addi $sp, $sp, 12
+		move $t7, $v0
+		move $t4, $t2
 		li $t0, 0
-		sw $t0, 8($sp)
-		li $t0, 0
-		sw $t0, 4($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
-		li $t0, 1
-		sw $t0, 28($sp)
-		lw $t0, 16($sp)
-		lw $t1, 28($sp)
-		beq $t0, $t1, main_label2
-		lw $t0, 52($sp)
-		addi $t0, $t0, 2
+		li $t6, 0
+		move $t3, $t4
+		li $t4, 1
+		beq $t7, $t4, main_label2
+		addi $t3, $t1, 2
+		move $a0, $t5
+		move $a1, $t3
+		addi $sp, $sp, -20
+		sw $t2, 16($sp)
+		sw $t1, 12($sp)
+		sw $t6, 8($sp)
+		sw $t5, 4($sp)
 		sw $t0, 0($sp)
-		lw $t0, 32($sp)
-		move $a0, $t0
-		lw $t0, 0($sp)
-		move $a1, $t0
 		jal divisible
-		move $t0, $v0
-		sw $t0, 16($sp)
-		lw $t0, 36($sp)
-		move $t0, $t0
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
-		li $t0, 1
-		sw $t0, 28($sp)
-		lw $t0, 16($sp)
-		lw $t1, 28($sp)
-		beq $t0, $t1, main_label2
-		lw $t0, 52($sp)
-		addi $t0, $t0, 6
-		sw $t0, 52($sp)
+		lw $t2, 16($sp)
+		lw $t1, 12($sp)
+		lw $t6, 8($sp)
+		lw $t5, 4($sp)
+		lw $t0, 0($sp)
+		addi $sp, $sp, 20
+		move $t7, $v0
+		move $t4, $t2
+		move $t3, $t4
+		li $t4, 1
+		beq $t7, $t4, main_label2
+		addi $t1, $t1, 6
 		j main_loop
 main_exit:
-		lw $t0, 8($sp)
 		move $t0, $t0
-		sw $t0, -4($sp)
-		lw $t0, 4($sp)
-		move $t0, $t0
-		sw $t0, 24($sp)
-		li $t0, 1
-		sw $t0, 24($sp)
-		lw $t0, 24($sp)
-		move $t0, $t0
-		sw $t0, 20($sp)
+		move $t4, $t6
+		li $t4, 1
+		move $t3, $t4
 main_print:
 		li $v0, 1
-		lw $t0, 20($sp)
-		move $a0, $t0
+		move $a0, $t3
 		syscall
 		li $v0, 11
 		li $a0, 10

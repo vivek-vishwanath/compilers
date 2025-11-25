@@ -133,7 +133,7 @@ public class Block {
         }
     }
 
-    public ArrayList<Virtual> livenessAlloc(IRFunction.MStack stack) {
+    public ArrayList<Virtual> livenessAlloc() {
         HashSet<Virtual> vRegSet = new HashSet<>();
         for (Virtual vreg : liveIns) {
             vRegSet.add(vreg);

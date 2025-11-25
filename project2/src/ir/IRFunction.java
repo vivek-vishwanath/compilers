@@ -177,55 +177,57 @@ public class IRFunction {
 
     // start $t# register allocation at number "start"
     public void naiveAlloc(MStack stack, int start) {
-        for (int i = 0; i < mipsInstructions.size(); i++) {
-            MIPSInstruction instruction = mipsInstructions.get(i);
-            Register[] reads = instruction.getReads();
-            Register write = instruction.getWrite();
-            for (int j = 0; j < reads.length; j++) {
-                Register read = reads[j];
-                if (!(read instanceof Register.Virtual vreg)) continue;
-                Addr address = stack.get(vreg);
-                Physical physical = Physical.get("$t" + (start + j));
-                for (int k = 0; k < instruction.operands.size(); k++) {
-                    if (instruction.operands.get(k) == read) {
-                        instruction.operands.set(k, physical);
-                        break;
-                    }
-                    if (instruction.operands.get(k) instanceof Addr addr) {
-                        if (addr.register == read) {
-                            if (addr.mode == Addr.Mode.BASE_OFFSET) {
-                                Addr newAddr = new Addr(addr.constant, physical);
-                                instruction.operands.set(k, newAddr);
-                            } else {
-                                instruction.operands.set(k, new Addr(physical));
-                            }
+        for (Block block : blocks) {
+
+            for (int i = 0; i < block.mipsInst.size(); i++) {
+                MIPSInstruction instruction = block.mipsInst.get(i);
+                Register[] reads = instruction.getReads();
+                Register write = instruction.getWrite();
+                for (int j = 0; j < reads.length; j++) {
+                    Register read = reads[j];
+                    if (!(read instanceof Register.Virtual vreg)) continue;
+                    Addr address = stack.get(vreg);
+                    Physical physical = Physical.get("$t" + (start + j));
+                    for (int k = 0; k < instruction.operands.size(); k++) {
+                        if (instruction.operands.get(k) == read) {
+                            instruction.operands.set(k, physical);
                             break;
                         }
+                        if (instruction.operands.get(k) instanceof Addr addr) {
+                            if (addr.register == read) {
+                                if (addr.mode == Addr.Mode.BASE_OFFSET) {
+                                    Addr newAddr = new Addr(addr.constant, physical);
+                                    instruction.operands.set(k, newAddr);
+                                } else {
+                                    instruction.operands.set(k, new Addr(physical));
+                                }
+                                break;
+                            }
+                        }
                     }
+                    String label = null;
+                    if (block.mipsInst.get(i).label != null) {
+                        label = block.mipsInst.get(i).label;
+                        block.mipsInst.get(i).label = null;
+                    }
+                    if (instruction.block != null) {
+                        int idx = instruction.block.mipsInst.indexOf(instruction);
+                        instruction.block.mipsInst.add(idx, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
+                    }
+                    i++; // move i down by 1
                 }
-                String label = null;
-                if (mipsInstructions.get(i).label != null) {
-                    label = mipsInstructions.get(i).label;
-                    mipsInstructions.get(i).label = null;
+                if (write instanceof Register.Virtual vreg) {
+                    Addr address = stack.get(vreg);
+                    Physical physical = Physical.get("$t" + start);
+                    instruction.operands.set(0, physical);
+                    // add after current instruction
+                    block.mipsInst.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
+                    if (instruction.block != null) {
+                        int idx = instruction.block.mipsInst.indexOf(instruction);
+                        instruction.block.mipsInst.add(idx + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
+                    }
+                    i++; // point i to sw instruction and i++ in for loop will skip over it
                 }
-                mipsInstructions.add(i, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
-                if (instruction.block != null) {
-                    int idx = instruction.block.mipsInst.indexOf(instruction);
-                    instruction.block.mipsInst.add(idx, new MIPSInstruction(MIPSOp.LW, label, instruction.block, physical, address));
-                }
-                i++; // move i down by 1
-            }
-            if (write instanceof Register.Virtual vreg) {
-                Addr address = stack.get(vreg);
-                Physical physical = Physical.get("$t" + start);
-                instruction.operands.set(0, physical);
-                // add after current instruction
-                mipsInstructions.add(i + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
-                if (instruction.block != null) {
-                    int idx = instruction.block.mipsInst.indexOf(instruction);
-                    instruction.block.mipsInst.add(idx + 1, new MIPSInstruction(MIPSOp.SW, null, instruction.block, physical, address));
-                }
-                i++; // point i to sw instruction and i++ in for loop will skip over it
             }
         }
     }
@@ -254,7 +256,7 @@ public class IRFunction {
                 done &= block.livenessAnalysis();
             }
         }
-        HashSet<Register.Virtual> vRegList = new HashSet<>();
+        ArrayList<Register.Virtual> vRegList = new ArrayList<>();
         for (Block block : blocks) {
             for (MIPSInstruction mipsInstruction : block.mipsInst) {
                 Register[] reads = mipsInstruction.getReads();
@@ -265,15 +267,16 @@ public class IRFunction {
                 if (write instanceof Register.Virtual vReg) vReg.reset();
             }
         }
-        for (Block block : blocks) vRegList.addAll(block.livenessAlloc(new MStack()));
+        for (Block block : blocks)
+            vRegList.addAll(block.livenessAlloc());
         for (Register.Virtual vreg : vRegList) {
             vreg.backupAlives = new HashSet<>(vreg.concurrentAlives);
         }
-        chaitinBriggsAlloc(vRegList);
+        chaitinBriggsAlloc(vRegList, new MStack());
     }
 
-    public void chaitinBriggsAlloc(HashSet<Register.Virtual> vRegSet) {
-        ArrayList<Register.Virtual> vRegList = new ArrayList<>(vRegSet);
+    public void chaitinBriggsAlloc(ArrayList<Register.Virtual> vRegList, MStack stack) {
+        vRegList = new ArrayList<>(vRegList.stream().distinct().toList());
         Collections.sort(vRegList);
         ArrayList<Physical> physicalRegs = new ArrayList<>();
         for (int i = 0; i < NUM_PHYSICAL; i++) {
@@ -312,7 +315,7 @@ public class IRFunction {
                 if (concurrent.physicalReg != null) copy.remove(concurrent.physicalReg);
             }
             if (!(vreg.isSpilled = copy.isEmpty())) {
-                vreg.physicalReg = copy.get(copy.size() - 1);
+                vreg.physicalReg = copy.get(0);
             }
         }
         for (Block block : blocks) {
@@ -332,6 +335,7 @@ public class IRFunction {
                 }
             }
         }
+        naiveAlloc(stack, 8);
         for (Block block : blocks) {
             ArrayList<MIPSInstruction> mipsInst = block.mipsInst;
             for (int i = 0; i < mipsInst.size(); i++) {

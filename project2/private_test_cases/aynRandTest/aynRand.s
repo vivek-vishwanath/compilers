@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -14,20 +22,13 @@ main:
 		sw $ra, 4($fp)
 		addi $sp, $fp, -8
 		li $t0, 0
-		sw $t0, 4($sp)
-		li $t0, 100
-		sw $t0, 0($sp)
+		li $t1, 100
 main_start_loop:
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
 		bge $t0, $t1, main_exit_loop
-		lw $t0, 4($sp)
 		addi $t0, $t0, 1
-		sw $t0, 4($sp)
 		j main_start_loop
 main_exit_loop:
 		li $v0, 1
-		lw $t0, 4($sp)
 		move $a0, $t0
 		syscall
 main_teardown:

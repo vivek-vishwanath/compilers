@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -18,38 +26,22 @@ main:
 		add $a0, $a0, $a0
 		li $v0, 9
 		syscall
-		move $t0, $v0
-		sw $t0, 4($sp)
+		move $t1, $v0
 		li $t0, 0
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
 		sw $t0, 0($t1)
 		li $t0, 0
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
 		sw $t0, 4($t1)
 		li $t0, 0
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
 		sw $t0, 8($t1)
 		li $t0, -1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
 		sw $t0, 0($t1)
 		li $t0, 1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 4($sp)
 		sw $t0, 8($t1)
-		lw $t0, 4($sp)
-		move $a0, $t0
+		move $a0, $t1
+		addi $sp, $sp, -0
 		jal arrPrinter
+		addi $sp, $sp, 0
 		move $t0, $v0
-		sw $t0, -4($sp)
 main_teardown:
 		addi $sp, $fp, 8
 		lw $ra, 4($fp)
@@ -61,39 +53,22 @@ arrPrinter:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -12
-		move $t0, $a0
-		sw $t0, 8($sp)
-		li $t0, 0
-		sw $t0, 4($sp)
+		move $t3, $a0
+		li $t1, 0
 arrPrinter_loop_start:
 		li $t0, 3
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		bge $t0, $t1, arrPrinter_loop_exit
+		bge $t1, $t0, arrPrinter_loop_exit
 		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t0, ($t0)
-		sw $t0, -4($sp)
+		mul $t2, $t1, $t0
+		add $t0, $t3, $t2
+		lw $t2, ($t0)
 		li $v0, 1
-		lw $t0, -4($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 4($sp)
-		addi $t0, $t0, 1
-		sw $t0, 4($sp)
+		addi $t1, $t1, 1
 		j arrPrinter_loop_start
 arrPrinter_loop_exit:
 		li $v0, 123

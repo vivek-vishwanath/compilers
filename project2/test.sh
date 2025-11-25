@@ -24,10 +24,10 @@ fi
 
 echo ">>> Running initial build"
 echo "./run.sh $IR_FILE $S_FILE"
-./run.sh "$IR_FILE" "$S_FILE" --naive
+./run.sh "$IR_FILE" "$S_FILE" -o
 
 # --- Step 2: Run tests inside mips-interpreter ---
-echo ">>> Entering mips-interpreter/"
+echo "Entering mips-interpreter/"
 cd mips-interpreter
 
 # Loop through all test input/output pairs (0.in, 1.in, ...)

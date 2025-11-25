@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -15,74 +23,48 @@ main:
 		addi $sp, $fp, -12
 		li $v0, 5
 		syscall
-		move $t0, $v0
-		sw $t0, 8($sp)
+		move $t1, $v0
 		li $v0, 5
 		syscall
 		move $t0, $v0
-		sw $t0, 4($sp)
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
+		add $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		sub $t0, $t0, $t1
-		sw $t0, 0($sp)
+		sub $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
+		mul $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		div $t0, $t0, $t1
-		sw $t0, 0($sp)
+		div $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		and $t0, $t0, $t1
-		sw $t0, 0($sp)
+		and $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 8($sp)
-		lw $t1, 4($sp)
-		or $t0, $t0, $t1
-		sw $t0, 0($sp)
+		or $t2, $t1, $t0
 		li $v0, 1
-		lw $t0, 0($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 11
 		li $a0, 10

@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main

@@ -23,22 +23,32 @@ main:
 		addi $sp, $fp, -16
 		li $v0, 5
 		syscall
-		move $t0, $v0
+		move $t2, $v0
+		li $t0, 0
+		li $t1, 0
+		li $t0, 0
+		li $v0, 1
+		move $a0, $t0
+		syscall
+main_lstart:
+		li $t0, 1
+		bge $t0, $t1, main_lexit
 		li $v0, 5
 		syscall
-		move $t2, $v0
-		li $t1, 0
-		li $t3, 0
-		or $t1, $t0, $t2
-		and $t1, $t0, $t2
-		and $t3, $t0, $t2
-		or $t3, $t0, $t2
+		move $t1, $v0
+		li $t0, 5
+		mul $t2, $t2, $t0
+		j main_lstart
+main_lexit:
 		li $v0, 1
 		move $a0, $t1
 		syscall
-		li $v0, 1
-		move $a0, $t3
-		syscall
+		li $t0, 0
+		li $t0, 0
+		bge $t0, $t2, main_else1
+		li $t0, 0
+main_else1:
+		add $zero, $zero, $zero
 main_teardown:
 		addi $sp, $fp, 8
 		lw $ra, 4($fp)

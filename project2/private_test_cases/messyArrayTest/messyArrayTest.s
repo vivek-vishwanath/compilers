@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -18,87 +26,41 @@ main:
 		add $a0, $a0, $a0
 		li $v0, 9
 		syscall
-		move $t0, $v0
-		sw $t0, 8($sp)
+		move $t2, $v0
 		li $t0, 0
-		sw $t0, 4($sp)
-		li $t0, -1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 8($sp)
-		sw $t0, 0($t1)
+		li $t1, -1
+		sw $t1, 0($t2)
 main_init_loop:
-		li $t0, 2
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
+		li $t1, 2
 		bge $t0, $t1, main_after_first_loop
-		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
-		li $t0, 4240
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 0($sp)
-		sw $t0, ($t1)
-		lw $t0, 4($sp)
+		li $t1, 4
+		mul $t3, $t0, $t1
+		add $t1, $t2, $t3
+		li $t3, 4240
+		sw $t3, ($t1)
 		addi $t0, $t0, 1
-		sw $t0, 4($sp)
 		j main_init_loop
 main_after_first_loop:
-		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
+		li $t1, 4
+		mul $t3, $t0, $t1
+		add $t1, $t2, $t3
 		li $t0, 1331
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t1, 0($sp)
 		sw $t0, ($t1)
 		li $t0, 0
-		sw $t0, 4($sp)
 main_print_loop:
-		li $t0, 3
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
+		li $t1, 3
 		bge $t0, $t1, main_end
-		li $t0, 4
-		sw $t0, 0($sp)
-		lw $t0, 4($sp)
-		lw $t1, 0($sp)
-		mul $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 8($sp)
-		lw $t1, 0($sp)
-		add $t0, $t0, $t1
-		sw $t0, 0($sp)
-		lw $t0, 0($sp)
-		lw $t0, ($t0)
-		sw $t0, -4($sp)
+		li $t3, 4
+		mul $t1, $t0, $t3
+		add $t3, $t2, $t1
+		lw $t1, ($t3)
 		li $v0, 1
-		lw $t0, -4($sp)
-		move $a0, $t0
+		move $a0, $t1
 		syscall
 		li $v0, 11
 		li $a0, 10
 		syscall
-		lw $t0, 4($sp)
 		addi $t0, $t0, 1
-		sw $t0, 4($sp)
 		j main_print_loop
 main_end:
 		add $zero, $zero, $zero

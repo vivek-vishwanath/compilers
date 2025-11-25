@@ -2,6 +2,14 @@
 	STACK: .word -2147483648
 
 .text
+li $t0, 0
+li $t1, 0
+li $t2, 0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6, 0
+li $t7, 0
 	lw $sp, STACK
 	move $fp, $sp
 	jal main
@@ -13,33 +21,22 @@ main:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -28
-		li $t0, 123
-		sw $t0, 24($sp)
-		li $t0, 456
-		sw $t0, 20($sp)
-		li $t0, 789
-		sw $t0, 16($sp)
+		li $t3, 123
+		li $t1, 456
+		li $t4, 789
 		li $t0, -123
-		sw $t0, 12($sp)
-		li $t0, -456
-		sw $t0, 8($sp)
-		li $t0, -789
-		sw $t0, 4($sp)
-		lw $t0, 8($sp)
-		sw $t0, -16($sp)
-		lw $t0, 4($sp)
-		sw $t0, -12($sp)
-		lw $t0, 24($sp)
-		move $a0, $t0
-		lw $t0, 20($sp)
-		move $a1, $t0
-		lw $t0, 16($sp)
-		move $a2, $t0
-		lw $t0, 12($sp)
+		li $t5, -456
+		li $t2, -789
+		sw $t5, -16($sp)
+		sw $t2, -12($sp)
+		move $a0, $t3
+		move $a1, $t1
+		move $a2, $t4
 		move $a3, $t0
+		addi $sp, $sp, -0
 		jal printer
+		addi $sp, $sp, 0
 		move $t0, $v0
-		sw $t0, 0($sp)
 main_teardown:
 		addi $sp, $fp, 8
 		lw $ra, 4($fp)
@@ -51,37 +48,27 @@ printer:
 		addi $fp, $sp, -8
 		sw $ra, 4($fp)
 		addi $sp, $fp, -32
-		move $t0, $a0
-		sw $t0, 20($sp)
-		move $t0, $a1
-		sw $t0, 16($sp)
+		move $t1, $a0
+		move $t3, $a1
 		move $t0, $a2
-		sw $t0, 12($sp)
-		move $t0, $a3
-		sw $t0, 8($sp)
+		move $t4, $a3
 		li $v0, 1
-		lw $t0, 20($sp)
+		move $a0, $t1
+		syscall
+		li $v0, 1
+		move $a0, $t3
+		syscall
+		li $v0, 1
 		move $a0, $t0
 		syscall
 		li $v0, 1
-		lw $t0, 16($sp)
-		move $a0, $t0
+		move $a0, $t4
 		syscall
 		li $v0, 1
-		lw $t0, 12($sp)
-		move $a0, $t0
+		move $a0, $t2
 		syscall
 		li $v0, 1
-		lw $t0, 8($sp)
-		move $a0, $t0
-		syscall
-		li $v0, 1
-		lw $t0, 24($sp)
-		move $a0, $t0
-		syscall
-		li $v0, 1
-		lw $t0, 28($sp)
-		move $a0, $t0
+		move $a0, $t5
 		syscall
 		li $v0, 4240
 		j printer_teardown

@@ -18,6 +18,9 @@ public class Generator {
 
         writer.write(".data\n\tSTACK: .word " + (long) MemLayout.STACK + "\n\n");
         writer.write(".text\n");
+        for (int i = 0; i < 8; i++) {
+            writer.write("\tli $t" + i + ", 0\n");
+        }
         writer.write("\tlw $sp, STACK\n");
         writer.write("\tmove $fp, $sp\n");
         writer.write("\tjal main\n\tli $v0, 10\n\tsyscall\n\n");

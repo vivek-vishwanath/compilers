@@ -92,7 +92,7 @@ public abstract class Register extends MIPSOperand {
 
         @Override
         public int compareTo(Register.Virtual that) {
-            return this.concurrentAlives.size() - that.concurrentAlives.size();
+            return (this.concurrentAlives.size() - that.concurrentAlives.size()) * 1000 + that.idx - this.idx;
         }
 
         public static class Range {
