@@ -1,0 +1,7 @@
+main let
+    var X: float;
+in begin
+    X := a ^ b;
+    X := ~b;
+    X := #5;
+end
