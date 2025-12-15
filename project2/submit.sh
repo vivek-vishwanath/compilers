@@ -1,4 +1,5 @@
 mkdir -p submit/
+cp report.pdf submit/
 cp run.sh submit/
 cp build.sh submit
 cp -r src submit/
