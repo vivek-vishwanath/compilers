@@ -12,7 +12,7 @@ private:
   void printInfo();
 
   // Example function to implement reachability:
-  // bool isReachable(BasicBlock *src, BasicBlock *dest, FunctionAnalysisManager &FAM);
+  bool isReachable(BasicBlock *src, BasicBlock *dest, FunctionAnalysisManager &FAM);
 
 public:
   PreservedAnalyses run(Module &, ModuleAnalysisManager &);
