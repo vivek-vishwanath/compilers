@@ -1,0 +1,11 @@
+set(C_BENCHMARKS lbm mcf)
+set(CXX_BENCHMARKS bc cc pr sssp tc)
+
+find_program(CLANG_TOOL clang PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+find_program(CLANGXX_TOOL clang++ PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+find_program(LLVMLINK_TOOL llvm-link PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+find_program(LLVMDIS_TOOL llvm-dis PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+
+foreach (BENCH IN LISTS C_BENCHMARKS CXX_BENCHMARKS)
+  add_subdirectory(${BENCH})
+endforeach()
