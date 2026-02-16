@@ -1,14 +1,13 @@
 #include "Part020.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Analysis/CFG.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/Module.h"
 #include <limits>
 
 using namespace llvm;
 
 AnalysisKey Part2::Key;
-
 
 Part2::Result Part2::run(Module &M, ModuleAnalysisManager &MAM) {
   // Use the FunctionAnalysisManager to get per-function analyses.
@@ -27,13 +26,13 @@ Part2::Result Part2::run(Module &M, ModuleAnalysisManager &MAM) {
 
   int totalBBs = 0;
   int totalEdges = 0;
-  int totalSwitchSuccessors = 0;
-  int totalBranchSuccessors = 0;
-  int totalOtherSuccessors = 0;
   int numFunctions = 0;
-  int numSwitchInsts = 0;
-  int numBranchInsts = 0;
-  int numOtherInsts = 0;
+  int numFunctionsWithSwitch = 0;
+  int numFunctionsWithBranch = 0;
+  int numFunctionsWithOther = 0;
+  int totalSwitchesPerFunc = 0;
+  int totalBranchesPerFunc = 0;
+  int totalOthersPerFunc = 0;
 
   double totalAvgDominators = 0.0;
   double maxAvgDominators = std::numeric_limits<double>::lowest();
@@ -58,6 +57,10 @@ Part2::Result Part2::run(Module &M, ModuleAnalysisManager &MAM) {
       result.basicBlockStats.max = bbCount;
 
     int edgeCount = 0;
+    int switchCountInFunc = 0;
+    int branchCountInFunc = 0;
+    int otherCountInFunc = 0;
+
     for (BasicBlock &BB : F) {
       Instruction *terminator = BB.getTerminator();
       if (!terminator)
@@ -68,27 +71,40 @@ Part2::Result Part2::run(Module &M, ModuleAnalysisManager &MAM) {
 
       // Categorize terminator instructions
       if (isa<SwitchInst>(terminator)) {
-        numSwitchInsts++;
-        totalSwitchSuccessors += numSuccessors;
-        if (numSuccessors < result.terminatorInstStats.switchInstStats.min)
-          result.terminatorInstStats.switchInstStats.min = numSuccessors;
-        if (numSuccessors > result.terminatorInstStats.switchInstStats.max)
-          result.terminatorInstStats.switchInstStats.max = numSuccessors;
+        switchCountInFunc++;
       } else if (isa<BranchInst>(terminator)) {
-        numBranchInsts++;
-        totalBranchSuccessors += numSuccessors;
-        if (numSuccessors < result.terminatorInstStats.branchInstStats.min)
-          result.terminatorInstStats.branchInstStats.min = numSuccessors;
-        if (numSuccessors > result.terminatorInstStats.branchInstStats.max)
-          result.terminatorInstStats.branchInstStats.max = numSuccessors;
+        branchCountInFunc++;
       } else {
-        numOtherInsts++;
-        totalOtherSuccessors += numSuccessors;
-        if (numSuccessors < result.terminatorInstStats.otherInstStats.min)
-          result.terminatorInstStats.otherInstStats.min = numSuccessors;
-        if (numSuccessors > result.terminatorInstStats.otherInstStats.max)
-          result.terminatorInstStats.otherInstStats.max = numSuccessors;
+        otherCountInFunc++;
       }
+    }
+
+    // Update per-function counts
+    if (switchCountInFunc > 0) {
+      numFunctionsWithSwitch++;
+      totalSwitchesPerFunc += switchCountInFunc;
+      if (switchCountInFunc < result.terminatorInstStats.switchInstStats.min)
+        result.terminatorInstStats.switchInstStats.min = switchCountInFunc;
+      if (switchCountInFunc > result.terminatorInstStats.switchInstStats.max)
+        result.terminatorInstStats.switchInstStats.max = switchCountInFunc;
+    }
+
+    if (branchCountInFunc > 0) {
+      numFunctionsWithBranch++;
+      totalBranchesPerFunc += branchCountInFunc;
+      if (branchCountInFunc < result.terminatorInstStats.branchInstStats.min)
+        result.terminatorInstStats.branchInstStats.min = branchCountInFunc;
+      if (branchCountInFunc > result.terminatorInstStats.branchInstStats.max)
+        result.terminatorInstStats.branchInstStats.max = branchCountInFunc;
+    }
+
+    if (otherCountInFunc > 0) {
+      numFunctionsWithOther++;
+      totalOthersPerFunc += otherCountInFunc;
+      if (otherCountInFunc < result.terminatorInstStats.otherInstStats.min)
+        result.terminatorInstStats.otherInstStats.min = otherCountInFunc;
+      if (otherCountInFunc > result.terminatorInstStats.otherInstStats.max)
+        result.terminatorInstStats.otherInstStats.max = otherCountInFunc;
     }
 
     // Update CFG edge stats
@@ -143,25 +159,25 @@ Part2::Result Part2::run(Module &M, ModuleAnalysisManager &MAM) {
     result.dominatorBlockStats.avgDominatorNum = totalAvgDominators / numFunctions;
   }
 
-  if (numSwitchInsts > 0) {
+  if (numFunctionsWithSwitch > 0) {
     result.terminatorInstStats.switchInstStats.avg =
-        static_cast<double>(totalSwitchSuccessors) / numSwitchInsts;
+        static_cast<double>(totalSwitchesPerFunc) / numFunctionsWithSwitch;
   } else {
     result.terminatorInstStats.switchInstStats.min = 0;
     result.terminatorInstStats.switchInstStats.max = 0;
   }
 
-  if (numBranchInsts > 0) {
+  if (numFunctionsWithBranch > 0) {
     result.terminatorInstStats.branchInstStats.avg =
-        static_cast<double>(totalBranchSuccessors) / numBranchInsts;
+        static_cast<double>(totalBranchesPerFunc) / numFunctionsWithBranch;
   } else {
     result.terminatorInstStats.branchInstStats.min = 0;
     result.terminatorInstStats.branchInstStats.max = 0;
   }
 
-  if (numOtherInsts > 0) {
+  if (numFunctionsWithOther > 0) {
     result.terminatorInstStats.otherInstStats.avg =
-        static_cast<double>(totalOtherSuccessors) / numOtherInsts;
+        static_cast<double>(totalOthersPerFunc) / numFunctionsWithOther;
   } else {
     result.terminatorInstStats.otherInstStats.min = 0;
     result.terminatorInstStats.otherInstStats.max = 0;
