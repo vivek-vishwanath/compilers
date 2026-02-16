@@ -5,13 +5,7 @@ import os
 from pathlib import Path
 
 def prompt_for_filename():
-    filename = input("Enter your gatech username: ")
-    filename = filename.strip()
-    while " " in filename or not filename:
-        print("Invalid username. Please try again.")
-        filename = input("Enter your gatech username: ").strip()
-
-    return f"{filename}_submission.zip"
+    return f"vvishwanath9_submission.zip"
 
 def main():
     items_to_zip = ['src']
