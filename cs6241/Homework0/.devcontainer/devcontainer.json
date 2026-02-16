@@ -1,0 +1,19 @@
+{
+  "name": "CS 6241 Homework 0",
+  "build": { "dockerfile": "Dockerfile" },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2.5.5": {
+      "configureZshAsDefaultShell": true,
+      "upgradePackages": false,
+      "username": "vscode"
+    }
+  }
+}
+
