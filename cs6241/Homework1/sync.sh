@@ -1,7 +1,7 @@
 
 shopt -s expand_aliases
 source ~/.bash_aliases
-gad
+ga src/Part*
 guns src/CMakeLists.txt
 
 gca --no-edit
