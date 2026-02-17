@@ -1,4 +1,4 @@
-set(C_BENCHMARKS lbm mcf)
+set(C_BENCHMARKS lbm mcf jtest)
 set(CXX_BENCHMARKS bc cc pr sssp tc)
 
 find_program(CLANG_TOOL clang PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)

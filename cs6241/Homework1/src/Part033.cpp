@@ -67,7 +67,7 @@ bool bfs(BasicBlock *A, BasicBlock *B) {
   return false;
 }
 
-bool isReachable(BasicBlock *A, BasicBlock *B, FunctionAnalysisManager &FAM) {
+bool reachable(BasicBlock *A, BasicBlock *B, FunctionAnalysisManager &FAM, int *totalDefs) {
   for (const llvm::Instruction &I : *A) {
     if (!I.getType()->isVoidTy()) (*totalDefs)++;
   }
@@ -80,7 +80,7 @@ bool isReachable(BasicBlock *A, BasicBlock *B, FunctionAnalysisManager &FAM) {
   LoopInfo &LI = FAM.getResult<LoopAnalysis>(*F);
   Loop *LA = LI.getLoopFor(A);
   Loop *LB = LI.getLoopFor(B);
-  if (LA == LB) return true;
+  if (LA == LB && LA) return true;
   return bfs(A, B);
 }
 
@@ -94,8 +94,12 @@ PreservedAnalyses Part33::run(Module &M, ModuleAnalysisManager &MAM) {
   int n = 0;
   int totalDefs = 0;
   for (; trials < 1000000; trials++) {
+    int defs = 0;
     auto [BB1, BB2] = getRandomBBPair(M);
-    if (reachable(BB1, BB2, FAM, &totalDefs)) n++;
+    if (reachable(BB1, BB2, FAM, &defs)) {
+      n++;
+      totalDefs += defs;
+    }
   }
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration =
