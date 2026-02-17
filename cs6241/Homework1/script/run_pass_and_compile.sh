@@ -5,7 +5,7 @@ ROOT=$(dirname "$CURR")
 DEF="${ROOT}/def"
 PLUGIN="${ROOT}/libHW1.so"
 PASSES=(part2 part31 part32 part33 part34 part4)
-C_BENCHMARKS=(lbm mcf)
+C_BENCHMARKS=(lbm mcf jtest)
 CXX_BENCHMARKS=(bc cc pr sssp tc)
 
 function usage() {

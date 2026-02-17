@@ -4,7 +4,8 @@ CURR=$(readlink -f "$0")
 ROOT=$(dirname "$CURR")
 PLUGIN="${ROOT}/libHW1.so"
 PASSES=(part2 part31 part32 part33 part34 part4)
-BENCHMARKS=(lbm mcf bc cc pr sssp tc)
+BENCHMARKS=(lbm mcf bc cc pr sssp tc jtest
+)
 
 function usage() {
   local name='run_pass.sh'
