@@ -14,8 +14,8 @@ public:
   static AnalysisKey Key;
 
   struct Result {
-    llvm::DenseMap<Function *, DenseSet<Function *>> locallyAlwaysExecuted;
-    llvm::DenseSet<Function *> alwaysExecutedFromMain;
+    llvm::DenseMap<Function *, DenseSet<Function *>> localAlways;
+    llvm::DenseSet<Function *> alwaysExecuted;
   };
 
   Result run(Module &M, ModuleAnalysisManager &MAM);
@@ -28,7 +28,7 @@ void serializeExecutionResults(const Part4::Result &R) {
     llvm::json::Object Root;
 
     llvm::json::Object LocalMap;
-    for (auto const& [Func, Set] : R.locallyAlwaysExecuted) {
+    for (auto const& [Func, Set] : R.localAlways) {
         llvm::json::Array FunctionSet;
         for (Function *F : Set) {
             FunctionSet.push_back(F->getName().str());
@@ -38,7 +38,7 @@ void serializeExecutionResults(const Part4::Result &R) {
     Root["locallyAlwaysExecuted"] = std::move(LocalMap);
 
     llvm::json::Array MainSet;
-    for (Function *F : R.alwaysExecutedFromMain) {
+    for (Function *F : R.alwaysExecuted) {
         MainSet.push_back(F->getName().str());
     }
     Root["alwaysExecutedFromMain"] = std::move(MainSet);

@@ -172,19 +172,13 @@ Part4::Result Part4::run(Module &M, ModuleAnalysisManager &MAM) {
         changed = true;
     }
   }
-  
-  for (auto &F : M) {
-    if (F.isDeclaration()) continue;
-    if (F.getName() != "main") continue;
-    errs() << "Function: " << F.getName() << "\n";
-    errs() << "  Local always-executed   : ";
-    for (auto *fn : localAlways[&F])   errs() << fn->getName() << " ";
-    errs() << "\n  NonLocal always-executed: ";
-    for (auto *fn : nonLocalAlways[&F]) errs() << fn->getName() << " ";
-    errs() << "\n  Combined always-executed: ";
-    for (auto *fn : alwaysExecuted[&F]) errs() << fn->getName() << " ";
-    errs() << "\n";
+
+  Function *mainFn = M.getFunction("main");
+  for (auto &[fn, calleeSet] : localAlways) {
+    result.localAlways[fn].insert(calleeSet.begin(), calleeSet.end());
   }
+  result.alwaysExecuted.insert(alwaysExecuted[mainFn].begin(), alwaysExecuted[mainFn].end());
+  // outs() << "alwaysExecuted size: " << result.alwaysExecuted.size() << "\n";
   return result;
 }
 
