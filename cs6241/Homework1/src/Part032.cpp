@@ -79,7 +79,6 @@ std::vector<int> countEntryPoints(std::vector<std::set<int>> &sccs, std::vector<
         // If predecessor is not in SCC, BB is an entry
         if (scc.find(map[pred]) == scc.end()) {
           entries++;
-          outs() << entries << "\n";
           break;
         }
       }
@@ -118,14 +117,6 @@ Part32::Result Part32::run(Module &M, ModuleAnalysisManager &MAM) {
     for (BasicBlock &BB : F) {
       blocks.push_back(&BB);
       map[&BB] = i++;
-    }
-    outs() << F.getName() << "\n";
-    for (BasicBlock &BB : F) {
-      outs() << "\t" << map[&BB] << ": ";
-      for (BasicBlock *bb : successors(&BB)) {
-        outs() << map[bb] << ", ";
-      }
-      outs() << "\n";
     }
     auto reach = floydWarshall(blocks, map);
     auto sccs = stronglyConnectedComponents(reach);

@@ -199,7 +199,5 @@ PreservedAnalyses Part34::run(Module &M, ModuleAnalysisManager &MAM) {
   createTraceFinalizeDestructor(M);
   for (Function &F : M) instrumentFunction(F, M);
 
-  llvm::outs() << "Instrumentation complete\n";
-
   return PreservedAnalyses::none();
 }

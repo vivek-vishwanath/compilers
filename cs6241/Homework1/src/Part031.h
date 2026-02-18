@@ -34,7 +34,7 @@ class Part31Printer : public PassInfoMixin<Part31Printer> {
     json["totalNumExitEdges"] = R.totalNumExitEdges;
     json["longestPathLength"] = R.longestPathLength;
     StringRef loopInfoStr = R.longestPathLoop
-                                ? R.longestPathLoop->getHeader()->getName()
+                                ? R.longestPathLoop->getHeader()->getNameOrAsOperand()
                                 : "null";
     json["longestPathLoopHeader"] = loopInfoStr;
     return json;
