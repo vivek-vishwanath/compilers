@@ -9,10 +9,6 @@ static const char *trace_filename = "program_trace.txt";
 // Initialize tracing - open trace file
 void __trace_init() {
     trace_file = fopen(trace_filename, "w");
-    if (!trace_file) {
-        fprintf(stderr, "Error: Could not open trace file %s\n", trace_filename);
-        exit(1);
-    }
 }
 
 // Finalize tracing - close trace file
